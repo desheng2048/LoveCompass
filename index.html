@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>恋爱罗盘 · Love Compass</title>
+<style>
+/* ================= 全局样式 ================= */
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(135deg, #ffe8ee 0%, #ffd9cf 45%, #fff3e0 100%);
+  background-attachment: fixed;
+  color: #4a2c3a;
+  display: flex; justify-content: center; align-items: flex-start;
+  min-height: 100%;
+}
+#app { width: 100%; max-width: 520px; min-height: 100vh; padding: 24px 18px 40px; display: flex; flex-direction: column; }
+.page { display: none; flex: 1; flex-direction: column; }
+.page.active { display: flex; animation: fadeIn .45s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.card {
+  background: rgba(255,255,255,.92);
+  border-radius: 22px;
+  box-shadow: 0 10px 32px rgba(214,106,131,.16);
+  padding: 26px 22px;
+}
+h1, h2 { font-weight: 700; }
+.btn {
+  display: block; width: 100%; border: none; cursor: pointer;
+  background: linear-gradient(135deg, #e8617c, #ff8f6b);
+  color: #fff; font-size: 17px; font-weight: 600; letter-spacing: 2px;
+  padding: 15px 0; border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(232,97,124,.35);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn:active { transform: scale(.97); }
+.btn.ghost {
+  background: #fff; color: #e8617c;
+  border: 1.5px solid #f3b8c4; box-shadow: none;
+}
+
+/* ================= 开始页 ================= */
+#logo-wrap { text-align: center; margin: 46px 0 6px; }
+#logo-wrap svg { width: 108px; height: 108px; filter: drop-shadow(0 8px 16px rgba(232,97,124,.28)); }
+#logo-title { font-size: 34px; color: #d94f6e; letter-spacing: 4px; margin-top: 14px; }
+#logo-sub { font-size: 13px; color: #b98a97; letter-spacing: 5px; margin-top: 6px; }
+#intro-card { margin-top: 30px; }
+#intro-card h2 { font-size: 17px; color: #d94f6e; margin-bottom: 10px; }
+#intro-card p { font-size: 14.5px; line-height: 1.85; color: #7a5a66; }
+#tips { margin-top: 18px; font-size: 12.5px; color: #b98a97; line-height: 1.9; }
+#tips span { background: #fff0f3; border-radius: 8px; padding: 2px 8px; margin-right: 4px; display: inline-block; margin-bottom: 4px; }
+#btn-start { margin-top: 26px; }
+#btn-continue { margin-top: 12px; display: none; }
+
+/* ================= 答题页 ================= */
+#quiz-top { margin: 6px 0 18px; text-align: center; }
+#quiz-count { font-size: 13px; color: #b06a80; letter-spacing: 2px; margin-bottom: 10px; }
+#progress-track { height: 8px; background: rgba(255,255,255,.75); border-radius: 99px; overflow: hidden; }
+#progress-bar { height: 100%; width: 0%; border-radius: 99px; background: linear-gradient(90deg, #e8617c, #ff8f6b); transition: width .35s ease; }
+#q-card { flex: 1; display: flex; flex-direction: column; }
+#q-text { font-size: 17.5px; line-height: 1.7; font-weight: 600; color: #4a2c3a; margin-bottom: 20px; }
+#q-opts { display: flex; flex-direction: column; gap: 12px; }
+.opt {
+  background: #fff7f4; border: 1.6px solid #f5d9d5; border-radius: 16px;
+  padding: 14px 16px; font-size: 15px; line-height: 1.6; color: #5d4450;
+  cursor: pointer; transition: all .18s ease;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.opt:active { transform: scale(.985); }
+.opt .key {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+  background: #f3d7dc; color: #c2576f; font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  transition: all .18s ease;
+}
+.opt.picked { border-color: #e8617c; background: #ffeef2; box-shadow: 0 4px 14px rgba(232,97,124,.18); }
+.opt.picked .key { background: #e8617c; color: #fff; }
+#quiz-nav { margin-top: 20px; display: flex; gap: 12px; }
+#quiz-nav .btn { flex: 1; padding: 13px 0; font-size: 15px; letter-spacing: 1px; }
+#btn-prev { flex: 0 0 42% !important; }
+
+/* ================= 分析页 ================= */
+#page-analyze { justify-content: center; align-items: center; text-align: center; }
+#compass-anim { width: 130px; height: 130px; animation: spin 1.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#analyze-tip { margin-top: 26px; font-size: 15px; color: #a4657a; letter-spacing: 2px; line-height: 2; }
+
+/* ================= 结果页 ================= */
+#res-type-card { text-align: center; padding: 34px 22px 28px; position: relative; overflow: hidden; }
+#res-emoji { font-size: 54px; line-height: 1; }
+#res-type-name { font-size: 28px; color: #d94f6e; letter-spacing: 3px; margin-top: 10px; }
+#res-slogan { font-size: 13.5px; color: #b06a80; margin-top: 8px; letter-spacing: 1px; }
+#res-desc { font-size: 14.5px; line-height: 1.9; color: #6d4d5c; text-align: justify; margin-top: 18px; }
+#sec-title { font-size: 16.5px; color: #d94f6e; margin: 30px 4px 12px; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+#sec-title::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, #f0b7c3, transparent); }
+#radar-card { display: flex; justify-content: center; padding: 20px 10px; }
+#adv-card li, #sug-card li {
+  list-style: none; font-size: 14.5px; line-height: 1.8; color: #5d4450;
+  padding: 10px 0 10px 2px; display: flex; gap: 10px; align-items: flex-start;
+  border-bottom: 1px dashed #f3d9dc;
+}
+#adv-card li:last-child, #sug-card li:last-child { border-bottom: none; }
+#adv-card li .ic, #sug-card li .ic { flex-shrink: 0; margin-top: 1px; }
+#love-card { text-align: center; padding: 22px; }
+#love-name { font-size: 21px; color: #e8617c; font-weight: 700; margin-top: 4px; letter-spacing: 2px; }
+#love-desc { font-size: 14px; color: #7a5a66; line-height: 1.8; margin-top: 10px; }
+#quote-card {
+  margin-top: 26px; padding: 24px 20px; text-align: center;
+  background: linear-gradient(135deg, #ffeef2, #fff3e0);
+  border-radius: 18px; border: 1px solid #f6cfd8;
+}
+#quote-text { font-size: 15.5px; color: #c2576f; line-height: 1.9; font-weight: 600; letter-spacing: 1px; }
+#quote-hint { font-size: 12px; color: #bd8d9c; margin-top: 12px; }
+#btn-restart { margin-top: 30px; }
+#res-footer { text-align: center; font-size: 11.5px; color: #c99aa7; margin-top: 18px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ 开始页 ============ -->
+  <div class="page active" id="page-start">
+    <div id="logo-wrap">
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="46" fill="#fff" stroke="#e8617c" stroke-width="3"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#f3b8c4" stroke-width="1.5" stroke-dasharray="3 4"/>
+        <path d="M50 12 L58 50 L50 44 L42 50 Z" fill="#e8617c"/>
+        <path d="M50 88 L58 50 L50 56 L42 50 Z" fill="#f3b8c4"/>
+        <circle cx="50" cy="50" r="5" fill="#ff8f6b"/>
+        <path d="M50 30 c-4 -7 -14 -6 -14 2 c0 6 8 10 14 15 c6 -5 14 -9 14 -15 c0 -8 -10 -9 -14 -2z" fill="#ff8f6b" transform="translate(0,-6) scale(.6) translate(33,22)"/>
+      </svg>
+      <h1 id="logo-title">恋爱罗盘</h1>
+      <div id="logo-sub">LOVE COMPASS</div>
+    </div>
+    <div class="card" id="intro-card">
+      <h2>🧭 在感情的海洋里，找到你的坐标</h2>
+      <p>这是一份写给情侣与夫妻的「感情定位测试」。50 道题，都来自你们真实会遇到的生活瞬间——沟通、吵架、花钱、家务、仪式感、安全感……<br><br>答完后，罗盘会告诉你：<b>你在感情中是什么定位</b>、你的<b>优势与盲区</b>，以及<b>接下来怎么做，感情会更好</b>。</p>
+      <div id="tips">
+        <span>⏱ 约 8 分钟</span><span>💕 无对错，遵从第一直觉</span><span>🔒 答题进度自动保存</span>
+      </div>
+    </div>
+    <button class="btn" id="btn-start">开始测试</button>
+    <button class="btn ghost" id="btn-continue">继续上次测试</button>
+  </div>
+
+  <!-- ============ 答题页 ============ -->
+  <div class="page" id="page-quiz">
+    <div id="quiz-top">
+      <div id="quiz-count">第 1 / 50 题</div>
+      <div id="progress-track"><div id="progress-bar"></div></div>
+    </div>
+    <div class="card" id="q-card">
+      <div id="q-text"></div>
+      <div id="q-opts"></div>
+    </div>
+    <div id="quiz-nav">
+      <button class="btn ghost" id="btn-prev">← 上一题</button>
+    </div>
+  </div>
+
+  <!-- ============ 分析页 ============ -->
+  <div class="page" id="page-analyze">
+    <svg id="compass-anim" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" fill="#fff" stroke="#e8617c" stroke-width="3"/>
+      <circle cx="50" cy="50" r="36" fill="none" stroke="#f3b8c4" stroke-width="1.5" stroke-dasharray="3 4"/>
+      <path d="M50 14 L59 50 L50 43 L41 50 Z" fill="#e8617c"/>
+      <path d="M50 86 L59 50 L50 57 L41 50 Z" fill="#f3b8c4"/>
+      <circle cx="50" cy="50" r="5" fill="#ff8f6b"/>
+    </svg>
+    <div id="analyze-tip">罗盘正在为你定位…<br><span style="font-size:12.5px;color:#c99aa7">分析沟通 · 冲突 · 经营 · 安全感 · 独立</span></div>
+  </div>
+
+  <!-- ============ 结果页 ============ -->
+  <div class="page" id="page-result">
+    <div class="card" id="res-type-card">
+      <div id="res-emoji">💖</div>
+      <h2 id="res-type-name"></h2>
+      <div id="res-slogan"></div>
+      <p id="res-desc"></p>
+    </div>
+    <div id="sec-title">📊 你的感情五维图</div>
+    <div class="card" id="radar-card"></div>
+    <div id="sec-title">✨ 你的优势</div>
+    <div class="card" id="adv-card"></div>
+    <div id="sec-title">🔍 你的盲区</div>
+    <div class="card" id="adv-card2"></div>
+    <div id="sec-title">🌱 以后这样做，感情会更好</div>
+    <div class="card" id="sug-card"></div>
+    <div id="sec-title">💌 你的爱之语言</div>
+    <div class="card" id="love-card">
+      <div style="font-size:30px">🎁</div>
+      <div id="love-name"></div>
+      <div id="love-desc"></div>
+    </div>
+    <div id="quote-card">
+      <div id="quote-text"></div>
+      <div id="quote-hint">📷 截下这张卡片，分享给另一半吧</div>
+    </div>
+    <button class="btn" id="btn-restart">🔄 重新测试</button>
+    <div id="res-footer">恋爱罗盘 · Love Compass —— 愿你们的爱，历久弥新</div>
+  </div>
+
+</div>
+<script>
+"use strict";
+/* ================================================================
+   计分与定位区：维度定义 / 计分引擎 / 8 种定位类型数据 / 爱之语言
+================================================================ */
+const DIMS = {
+  expr:   { name: "情感表达", color: "#e8617c" },
+  bond:   { name: "共处与冲突", color: "#ff8f6b" },
+  manage: { name: "经营与仪式感", color: "#f0a94b" },
+  secure: { name: "安全感与依恋", color: "#8fbf9f" },
+  indep:  { name: "独立与边界", color: "#7ea6c9" }
+};
+const DIM_KEYS = ["expr", "bond", "manage", "secure", "indep"];
+
+const LOVE_LANGS = {
+  words: { name: "肯定言词", icon: "💬", desc: "一句真诚的夸奖、一句「辛苦了」，就能让你瞬间满血。你需要把爱「说出来」，也希望对方常把爱说给你听。" },
+  time:  { name: "精心时刻", icon: "⏰", desc: "放下手机、专注陪伴的二人时光，是你心里「爱」的具象。比起礼物，你更在意「这段时间 TA 只属于我」。" },
+  gift:  { name: "用心礼物", icon: "🎁", desc: "礼物贵不在价，在于「TA 居然记得」。一份看见你、想着你的小物件，就能让你开心很久。" },
+  act:   { name: "服务行动", icon: "🛠️", desc: "嘴上的甜言不如落地的体贴。TA 默默修好台灯、做好一顿饭，你就知道：这就是爱。" },
+  touch: { name: "身体接触", icon: "🤗", desc: "一个拥抱胜过千言万语。牵手、依偎、出门前的吻，都是你确认「我们很好」的方式。" }
+};
+
+/* ---- 8 种感情定位类型：判定条件按顺序短路匹配，最后有兜底 ---- */
+const TYPES = [
+  { id: "anxious", emoji: "🌧️", name: "焦虑守望者", slogan: "爱得用力，也爱得不安",
+    cond: s => s.secure < 45 && s.manage >= 55,
+    desc: "你把感情看得极重，对方的一举一动都能牵动你的心。你愿意为这段关系倾尽心力，但也常常陷入「TA 是不是不爱我了」的内心戏——消息回慢了、语气冷一点，都能让你反复咀嚼半天。你的深情毋庸置疑，但过度守望会让你和对方都很累：你在等一个确认，对方却在被反复试探中渐渐疲惫。其实你值得的安全感，一半来自对方，另一半要来自你自己。",
+    adv: ["投入全情，愿意为感情花心思、花时间", "对细节敏感，常能第一时间察觉关系的变化", "一旦确认被爱，会回报加倍的温柔与忠诚"],
+    blind: ["容易过度解读小事，把「忙」脑补成「变心」", "试探和追问反而把对方推远", "把自己的安全感完全寄托在对方身上"],
+    tips: ["把「你在干嘛」换成「我想你了」——直接表达感受，而不是用质问来试探", "和对方约定一个「安心暗号」：情绪上头时先说暗号，再谈事情", "每天记录一件「对方对我好」的小事，训练注意力落在爱而不是威胁上", "给自己培养一个能沉浸的爱好，安全感自留一半，感情才能松弛"] },
+  { id: "flame", emoji: "🔥", name: "火焰表达者", slogan: "爱得炽热，也要学会控温",
+    cond: s => s.expr >= 60 && s.bond < 50 && s.secure < 60,
+    desc: "你是感情里最亮的那束火：爱就大声说，不满也藏不住。你的热情能让关系时刻保持温度，你的直率也能第一时间把问题摆上桌面——这是很多含蓄的伴侣求之不得的能力。但火焰的问题在于温度不好控：开心时把你捧上天，委屈时一句话就能点燃战火。你需要在「表达」前面加一道阀门：先降温，再开口，你的热情才不会被误读为攻击。",
+    adv: ["情感表达力极强，爱意从不缺席", "直来直去，没有冷战内耗，问题摊开得快", "感染力强，能把平淡日子过得热气腾腾"],
+    blind: ["情绪上头时说话冲，容易伤到最亲近的人", "表达欲过强时，容易盖过对方的声音", "爆发-和好的循环，会让关系在震荡中疲劳"],
+    tips: ["给自己定一个「暂停 20 分钟」规则：怒火上头时先离开现场，回来再谈", "把「你怎么这样」换成「我感觉到……」——描述自己，而不是审判对方", "每周留 15 分钟让 TA 主导话题，你只倾听不打断", "把热情分一些给日常：一句晚安、一个拥抱，比爆发后的补偿更珍贵"] },
+  { id: "voyager", emoji: "⛵", name: "独立远航者", slogan: "有自己的海，也有停靠的港湾",
+    cond: s => s.indep >= 62 && s.indep >= s.expr && s.indep >= s.bond && s.indep >= s.manage && s.indep >= s.secure,
+    desc: "你清醒、自洽，有自己的事业、爱好和朋友圈。你不依赖感情而活，这让你的爱没有捆绑感，也让伴侣在你面前不必扮演「完美恋人」。但要注意：你眼里的「正常距离」，在对方那里可能是「疏远」。感情的天平上，你习惯了做那个被靠近的人，偶尔也要学着主动靠近——不然爱你的人，会慢慢学会不再等你。",
+    adv: ["独立自洽，不把人生全部押在感情上", "给伴侣充分的空间与信任，相处无压迫感", "情绪稳定，很少无理取闹"],
+    blind: ["回应偏慢偏淡，容易被解读为「不在乎」", "习惯自己消化，让对方缺少参与感", "对亲密升温的信号不敏感，错过对方靠近的时刻"],
+    tips: ["每天主动发起一次「无目的聊天」：不谈事，只谈心情", "把你的独处需求说出口：「我需要半小时发呆，不是针对你」——说明白就不是冷暴力", "每月安排一次你主动策划的约会，让对方感受到「我也在追你」", "练习一句话表达：「今天虽然没说话，但我一直想着你」"] },
+  { id: "guardian", emoji: "💖", name: "暖心守护者", slogan: "把爱意，过成日子",
+    cond: s => s.expr >= 55 && s.manage >= 58 && s.secure >= 52,
+    desc: "你是感情里的「定海神针」：既敢表达爱，也舍得花心思经营，还自带让人安心的稳定气场。你记得对方的口味、节日的意义、TA 最近挂在嘴边的小愿望——你把「我爱你」翻译成了生活里一件件具体的小事。你们的关系在你手里通常不会出大问题，要提醒的是：守护者常常照顾了所有人，却忘了自己也需要被照顾。记得把需求说出口，让爱流动回来。",
+    adv: ["表达与行动俱佳，爱意落地为日常", "有仪式感，擅长制造属于你们的小确幸", "安全感足，情绪稳，是伴侣的避风港"],
+    blind: ["习惯付出，容易积攒委屈而不自知", "包揽太多，可能让伴侣失去参与感", "偶尔期待「不用说我也能懂」，落空会失落"],
+    tips: ["每周对自己说一次真话：最近哪件事我其实委屈了？说出来", "把一部分「安排」交给对方：让 TA 也体验一次为你们策划的感觉", "延续仪式感，但加入新意：交换角色、解锁新地点，防止套路化", "定期互相「述职」：这季度我做得好的/想改进的，互相听一听"] },
+  { id: "dreamer", emoji: "🌹", name: "浪漫造梦师", slogan: "爱要心动，也要落地",
+    cond: s => s.expr >= 58 && s.manage >= 55 && s.secure < 52,
+    desc: "你是天生的浪漫主义者：表白要策划、节日要惊喜、聊天要有趣。你的感情字典里没有「凑合」二字，和你在一起，日子像一场不散场的恋爱。但浪漫造梦师有一个隐秘的软肋——你爱「心动的时刻」，却可能回避「琐碎的日常」。当关系进入柴米油盐的平淡期，你会怀疑「是不是不爱了」。其实那不是爱的消失，而是爱换了形态：从烟花变成了炉火。",
+    adv: ["浪漫天赋满分，擅长制造心动瞬间", "表达力强，让伴侣始终感到被珍视", "对感情有想象力，能把平淡过出花样"],
+    blind: ["对「平淡期」耐受度低，容易误判感情变淡", "仪式感优先级过高，日常琐事可能被忽视", "理想化的期待，有时会给对方无形的压力"],
+    tips: ["给「平淡」正名：一起安静地买菜做饭，也是浪漫的一种", "把一次大惊喜换成七天小用心，日常的甜比节日的轰烈更持久", "和伴侣聊聊「你们各自的浪漫语言」，别用自己的标准定义用心", "在浪漫清单里加一项「务实行动」：比如替 TA 处理一件 TA 拖了很久的麻烦事"] },
+  { id: "listener", emoji: "🌿", name: "细腻倾听者", slogan: "懂你，是我最长情的告白",
+    cond: s => s.bond >= 58 && s.secure >= 55 && s.expr < 58,
+    desc: "你是关系里的「温柔稳定器」：共情力强、脾气温和、总能先看见对方的情绪。和你在一起的人往往很有安全感，因为你从不用激烈的方式处理分歧，你相信「好好说话能解决 99% 的问题」。但倾听者的温柔里藏着一个盲区：你接住了所有人的情绪，却很少表达自己的委屈。久了，对方以为你什么都不介意，你的失落却在心里越攒越厚。记得：你的感受，也值得被大声说出来。",
+    adv: ["共情力强，总能接住对方的情绪", "冲突处理成熟，很少让矛盾升级", "安全感充足，让伴侣感到踏实"],
+    blind: ["过度隐忍，习惯把委屈往肚子里咽", "回避表达需求，对方可能真的「以为你没事」", "和稀泥式的温和，可能让问题被搁置而非解决"],
+    tips: ["每天对 TA 说一件「今天的真实感受」，不管好坏，练习表达", "把「都行」「没事」从你的口头禅里删掉，换成具体想法", "温和不等于退让：涉及底线的问题，用温柔的语气说坚定的立场", "定期问自己：这段关系里，我有没有在「假性和睦」？"] },
+  { id: "mediator", emoji: "🕊️", name: "温和调解员", slogan: "以和为贵，但别和掉了自己",
+    cond: s => s.bond >= 55 && s.secure < 55,
+    desc: "你是天然的「灭火器」：吵架你想息事宁人，分歧你想各退一步，家里气氛因你而松弛。你的高情商让伴侣觉得好相处，让关系很少有硬碰硬的损耗。但调解员要警惕一种模式：为了和平，你太快妥协，快到忘了问自己「那我呢？」。真正的和睦不是没有冲突，而是冲突之后双方都还愿意回来。你的声音，和你们的关系一样重要。",
+    adv: ["情商高，擅长化解矛盾、维护关系氛围", "不强求控制对方，相处松弛", "包容度高，很少计较输赢"],
+    blind: ["回避冲突核心，问题容易反复出现", "过度求和，委屈自己成全气氛", "立场模糊，可能让对方觉得你「没态度」"],
+    tips: ["下次想说「都行」时，停三秒，说出你真正想要的那个选项", "练习「温和而坚定」：语气可以软，立场不必退", "每月一次「真心话时间」：把最近一次没说出口的不满讲出来", "记住：短暂的小摩擦，好过长期的大内耗"] },
+  { id: "helmsman", emoji: "🧭", name: "理性掌舵人", slogan: "爱是心动，更是责任",
+    cond: s => s.manage >= 55 && s.expr < 55 && s.secure >= 50,
+    desc: "你是感情里的「大副」：问题来了先想解决方案，日子长了先做长远规划。你的伴侣可能常被朋友羡慕——因为你的靠谱肉眼可见：房贷孩子爸妈工作，你心里都有一张清晰的图。但掌舵人也要记得，感情不是项目管理：对方有时需要的不是你的方案，而是你的共情。当 TA 说「今天好累」，先别急着分析怎么办，抱一抱，说一句「辛苦了」。",
+    adv: ["可靠、有规划，是关系的压舱石", "遇事不慌，擅长把危机拆解成步骤", "行动力强，说到做到"],
+    blind: ["共情表达偏少，容易被误解为「不解风情」", "讲道理优先于谈感受，让对方觉得「赢了道理输了温度」", "用「做事」代替「表达」，爱的信号传递不足"],
+    tips: ["练习「先接情绪，再给方案」：对方倾诉时，先共情三句再开口支招", "每周至少一次非功能性对话：不谈安排，只聊感受", "把你的爱「翻译」成对方听得懂的话：一句夸奖、一个拥抱", "允许自己偶尔「不理性」：撒娇和示弱，也是关系里的黏合剂"] }
+];
+/* 兜底：任何未匹配的组合，按最高维度给出归属 */
+const DIM_FALLBACK = { expr: "guardian", bond: "mediator", manage: "helmsman", secure: "listener", indep: "voyager" };
+
+/* ================================================================
+   交互与渲染区
+================================================================ */
+const $ = id => document.getElementById(id);
+const STORE_KEY = "loveCompassProgress_v1";
+let state = { idx: 0, answers: [] };
+let pickedLock = false;
+
+function show(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  $("page-" + page).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+/* ---------- 开始页 ---------- */
+function initStart() {
+  const saved = loadProgress();
+  if (saved && saved.idx > 0 && saved.idx < QUESTIONS.length) {
+    $("btn-continue").style.display = "block";
+    $("btn-continue").textContent = "继续上次测试（第 " + (saved.idx + 1) + " 题）";
+  }
+  $("btn-start").onclick = () => {
+    state = { idx: 0, answers: new Array(QUESTIONS.length).fill(-1) };
+    saveProgress(); renderQuiz(); show("quiz");
+  };
+  $("btn-continue").onclick = () => {
+    const s = loadProgress();
+    if (s) { state = s; renderQuiz(); show("quiz"); }
+  };
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (!Array.isArray(s.answers) || s.answers.length !== QUESTIONS.length || typeof s.idx !== "number") return null;
+    return s;
+  } catch (e) { return null; }
+}
+function saveProgress() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+function clearProgress() {
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+}
+
+/* ---------- 答题页 ---------- */
+const OPT_KEYS = ["A", "B", "C", "D"];
+function renderQuiz() {
+  pickedLock = false;
+  const q = QUESTIONS[state.idx];
+  $("quiz-count").textContent = "第 " + (state.idx + 1) + " / " + QUESTIONS.length + " 题";
+  $("progress-bar").style.width = (state.idx / QUESTIONS.length * 100).toFixed(1) + "%";
+  $("q-text").textContent = q.q;
+  const box = $("q-opts");
+  box.innerHTML = "";
+  q.opts.forEach((o, i) => {
+    const div = document.createElement("div");
+    div.className = "opt" + (state.answers[state.idx] === i ? " picked" : "");
+    div.innerHTML = '<span class="key">' + OPT_KEYS[i] + '</span><span>' + o.t + "</span>";
+    div.onclick = () => pick(i);
+    box.appendChild(div);
+  });
+  $("btn-prev").style.visibility = state.idx > 0 ? "visible" : "hidden";
+  if (!document.getElementById("btn-next")) {
+    const nb = document.createElement("button");
+    nb.className = "btn"; nb.id = "btn-next"; nb.textContent = "查看结果 →";
+    nb.onclick = finishQuiz;
+    $("quiz-nav").appendChild(nb);
+  }
+  $("btn-next").style.display = "none";
+}
+function pick(i) {
+  if (pickedLock) return;
+  pickedLock = true;
+  state.answers[state.idx] = i;
+  saveProgress();
+  const opts = document.querySelectorAll("#q-opts .opt");
+  opts.forEach((el, k) => { if (k === i) el.classList.add("picked"); });
+  setTimeout(() => {
+    pickedLock = false;
+    if (state.idx < QUESTIONS.length - 1) { state.idx++; saveProgress(); renderQuiz(); }
+    else { $("btn-next").style.display = "block"; }
+  }, 280);
+}
+$("btn-prev").onclick = () => {
+  if (state.idx > 0) { state.idx--; saveProgress(); renderQuiz(); }
+};
+
+/* ---------- 计分与判定 ---------- */
+function calcScores() {
+  const raw = {}; DIM_KEYS.forEach(k => raw[k] = 0);
+  const max = {}; DIM_KEYS.forEach(k => max[k] = 0);
+  const loveCount = {};
+  QUESTIONS.forEach((q, qi) => {
+    const ai = state.answers[qi];
+    if (ai < 0) return;
+    const opt = q.opts[ai];
+    if (!opt) return;
+    if (raw[opt.d] !== undefined) { raw[opt.d] += (opt.w || 1); }
+    q.opts.forEach(o => { if (max[o.d] !== undefined) max[o.d] += (o.w || 1); });
+    if (opt.love) loveCount[opt.love] = (loveCount[opt.love] || 0) + 1;
+  });
+  const pct = {};
+  DIM_KEYS.forEach(k => pct[k] = max[k] > 0 ? Math.round(raw[k] / max[k] * 100) : 0);
+  let topLove = null, topCnt = 0;
+  Object.keys(loveCount).forEach(k => { if (loveCount[k] > topCnt) { topCnt = loveCount[k]; topLove = k; } });
+  return { raw, max, pct, topLove };
+}
+function judgeType(pct) {
+  for (const t of TYPES) { if (t.cond(pct)) return t; }
+  let best = "expr", bv = -1;
+  DIM_KEYS.forEach(k => { if (pct[k] > bv) { bv = pct[k]; best = k; } });
+  const fb = TYPES.find(t => t.id === DIM_FALLBACK[best]);
+  return fb || TYPES[0];
+}
+const LOW_DIM_TIP = {
+  expr: "你们可能已经很久没有把「爱」说出口了。试试每天睡前互说一句感谢或赞美——哪怕有点尴尬，尴尬本身就是改变的开始。",
+  bond: "冲突与相处模式需要一次「升级」。约定一个暂停词，吵架时任何一方可喊暂停，20 分钟冷静后回来接着谈，不冷战、不算旧账。",
+  manage: "感情的新鲜感是「设计」出来的。本月安排一次只属于你们的半天约会：不带娃、不谈家务、手机静音，重新当一次恋人。",
+  secure: "安全感需要双向奔赴。把心里的担忧用「我感觉到……」的句式说出来，而不是靠追问和试探；同时也请对方给你确定的回应。",
+  indep: "再亲密也需要呼吸感。给彼此留出一晚「独处日」，各自做喜欢的事——适度的距离，反而让靠近更有引力。"
+};
+
+/* ---------- 分析页与结果页 ---------- */
+function finishQuiz() {
+  if (state.answers.some(a => a < 0)) {
+    const first = state.answers.findIndex(a => a < 0);
+    state.idx = first; renderQuiz(); return;
+  }
+  show("analyze");
+  setTimeout(() => { renderResult(); show("result"); clearProgress(); }, 2600);
+}
+function radarSVG(pct) {
+  const cx = 190, cy = 118, R = 78, N = DIM_KEYS.length;
+  const pt = (i, r) => {
+    const ang = -Math.PI / 2 + i * 2 * Math.PI / N;
+    return (cx + r * Math.cos(ang)).toFixed(1) + "," + (cy + r * Math.sin(ang)).toFixed(1);
+  };
+  let grid = "", labels = "";
+  for (let g = 1; g <= 4; g++) {
+    const pts = DIM_KEYS.map((k, i) => pt(i, R * g / 4)).join(" ");
+    grid += '<polygon points="' + pts + '" fill="none" stroke="#f0d5da" stroke-width="' + (g === 4 ? 1.5 : 1) + '"/>';
+  }
+  DIM_KEYS.forEach((k, i) => {
+    const ang = -Math.PI / 2 + i * 2 * Math.PI / N;
+    const lx = cx + (R + 16) * Math.cos(ang), ly = cy + (R + 16) * Math.sin(ang);
+    const anchor = Math.abs(lx - cx) < 14 ? "middle" : (lx > cx ? "start" : "end");
+    labels += '<text x="' + lx.toFixed(1) + '" y="' + (ly + 4).toFixed(1) + '" text-anchor="' + anchor + '" font-size="11.5" fill="#8a5f6e">' + DIMS[k].name + ' ' + pct[k] + "</text>";
+    grid += '<line x1="' + cx + '" y1="' + cy + '" x2="' + pt(i, R).split(",")[0] + '" y2="' + pt(i, R).split(",")[1] + '" stroke="#f0d5da" stroke-width="1"/>';
+  });
+  const dataPts = DIM_KEYS.map((k, i) => pt(i, R * pct[k] / 100)).join(" ");
+  const anim2 = '<animate attributeName="opacity" from="0" to="1" dur="0.9s" fill="freeze"/>';
+  return '<svg viewBox="0 0 380 236" width="100%" style="max-width:330px">' + grid +
+    '<polygon points="' + dataPts + '" fill="rgba(232,97,124,.25)" stroke="#e8617c" stroke-width="2.2" opacity="0">' + anim2 +
+    '<animateTransform attributeName="transform" type="translate" from="' + cx + ' ' + cy + '" to="0 0" dur="0.9s" fill="freeze" additive="sum"/>' + "</polygon>" +
+    DIM_KEYS.map((k, i) => {
+      const p = pt(i, R * pct[k] / 100).split(",");
+      return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3.4" fill="' + DIMS[k].color + '" opacity="0"><animate attributeName="opacity" from="0" to="1" begin="0.7s" dur="0.3s" fill="freeze"/></circle>';
+    }).join("") + labels + "</svg>";
+}
+function renderResult() {
+  const s = calcScores();
+  const t = judgeType(s.pct);
+  $("res-emoji").textContent = t.emoji;
+  $("res-type-name").textContent = t.name;
+  $("res-slogan").textContent = "「" + t.slogan + "」";
+  $("res-desc").textContent = t.desc;
+  $("radar-card").innerHTML = radarSVG(s.pct);
+  const li = (icon, txt) => '<li><span class="ic">' + icon + "</span><span>" + txt + "</span></li>";
+  $("adv-card").innerHTML = t.adv.map(x => li("✅", x)).join("");
+  $("adv-card2").innerHTML = t.blind.map(x => li("⚠️", x)).join("");
+  const lowest = DIM_KEYS.reduce((a, b) => s.pct[a] <= s.pct[b] ? a : b);
+  $("sug-card").innerHTML = t.tips.map(x => li("🌱", x)).join("") +
+    li("🎯", "<b>针对你的短板「" + DIMS[lowest].name + "」</b>：" + LOW_DIM_TIP[lowest]);
+  if (s.topLove) {
+    const L = LOVE_LANGS[s.topLove];
+    document.querySelector("#love-card > div").textContent = L.icon;
+    $("love-name").textContent = L.name;
+    $("love-desc").textContent = L.desc;
+  } else {
+    $("love-name").textContent = "有待探索";
+    $("love-desc").textContent = "你还没找到最能接收爱的方式，多留意哪种瞬间最让你心动吧。";
+  }
+  $("quote-text").textContent = "我是「" + t.name + "」" + t.emoji + " —— " + t.slogan + "。往后的日子，请多指教。";
+}
+$("btn-restart").onclick = () => {
+  clearProgress();
+  state = { idx: 0, answers: new Array(QUESTIONS.length).fill(-1) };
+  initStart(); show("start");
+};
+
+/* ================================================================
+   恋爱罗盘 · Love Compass —— 数据区：题库
+   维度 key：expr=情感表达  bond=共处与冲突  manage=经营与仪式感
+             secure=安全感与依恋  indep=独立与边界
+   爱语 love：words=肯定言词 time=精心时刻 gift=接受礼物 act=服务行动 touch=身体接触
+   每题 4 个选项，{ t: 选项文本, d: 维度, w: 权重(默认1), love: 爱语(可选) }
+================================================================ */
+const QUESTIONS = [
+{ q: "对方今天换了新发型/新衣服，满眼期待地看你，你会：", opts: [
+  { t: "第一时间夸出口：「也太好看了吧！」", d: "expr", love: "words" },
+  { t: "心里觉得不错，但嘴上不一定说出来", d: "indep" },
+  { t: "凑近认真打量，再给点具体的建议", d: "manage" },
+  { t: "「挺好的」——简短回应就继续忙自己的", d: "bond" } ] },
+{ q: "周末你精心准备了约会，对方临时加班放了鸽子，你会：", opts: [
+  { t: "有点失落，但等 TA 回来撒个娇求补偿", d: "secure" },
+  { t: "压住火气说「没关系」，闷闷地自己消化", d: "bond" },
+  { t: "直接说出感受：「我期待了好久，挺失落的」", d: "expr" },
+  { t: "正好，自己约朋友玩，也挺自在", d: "indep" } ] },
+{ q: "你们吵架后，通常谁先开口和好？", opts: [
+  { t: "我，冷战后先低头的人往往是我", d: "manage" },
+  { t: "TA 先来哄我，我才顺台阶下", d: "secure" },
+  { t: "差不多同时，谁也憋不住太久", d: "expr" },
+  { t: "经常就这样不了了之，慢慢淡过去", d: "bond" } ] },
+{ q: "对方问你「今天过得怎么样」，你最可能的回答是：", opts: [
+  { t: "详细讲一遍，开心的事吐槽的事都想说", d: "expr", love: "time" },
+  { t: "「就那样呗」，反问 TA 一句", d: "indep" },
+  { t: "挑重点说，顺便关心 TA 今天累不累", d: "manage" },
+  { t: "简短几句，更想赶紧休息", d: "bond" } ] },
+{ q: "你们家谁管钱、谁规划开支？", opts: [
+  { t: "一起记账，大额消费商量着来", d: "manage" },
+  { t: "各管各的，花自己的钱最自在", d: "indep" },
+  { t: "TA 管，我懒得操心这些", d: "secure" },
+  { t: "谁脾气好听谁的，为钱吵架不值当", d: "bond" } ] },
+{ q: "纪念日快到了，你的真实状态是：", opts: [
+  { t: "早就偷偷订好了餐厅，还准备了小礼物", d: "manage", love: "gift" },
+  { t: "记得日期，觉得心意到了就行，不必隆重", d: "indep" },
+  { t: "暗示过几次想要惊喜，等着 TA 安排", d: "expr" },
+  { t: "日子过好每天都一样，纪念日是形式", d: "bond" } ] },
+{ q: "对方工作受挫，跟你倒苦水，你的第一反应是：", opts: [
+  { t: "先抱抱 TA，说「辛苦了，有我在」", d: "expr", love: "touch" },
+  { t: "认真听完，帮 TA 分析问题出在哪", d: "manage" },
+  { t: "给 TA 独处空间，等 TA 想聊了再说", d: "indep" },
+  { t: "听着听着有点烦：「这有什么大不了的」", d: "bond" } ] },
+{ q: "关于家务分工，更接近你们现状的是：", opts: [
+  { t: "有大致分工，谁有空谁多干点", d: "manage" },
+  { t: "我干得多，但经常忍不住念叨", d: "expr" },
+  { t: "我干得多，念叨也没用就忍了", d: "secure" },
+  { t: "都很随意，乱一点也无妨", d: "bond" } ] },
+{ q: "对方跟异性同事聊得很热络，你会：", opts: [
+  { t: "不太在意，信任 TA 也会保护好关系", d: "secure" },
+  { t: "嘴上不说，心里反复琢磨 TA 的聊天记录", d: "secure" },
+  { t: "直接说出在意：「我希望你们保持点距离」", d: "expr" },
+  { t: "各人有各人的社交，不管为好", d: "indep" } ] },
+{ q: "你们上一次认真聊天（不谈家务孩子工作，只谈彼此）是多久前？", opts: [
+  { t: "这周就有，我们习惯随时聊", d: "manage", love: "time" },
+  { t: "一两个月前？想不起来了", d: "bond" },
+  { t: "我想聊，但 TA 总说累，改天吧", d: "expr" },
+  { t: "不聊天也挺好的，安静自在", d: "indep" } ] },
+{ q: "两个人意见不合、谁也说服不了谁时，你会：", opts: [
+  { t: "提议各自让一步，或找个折中方案", d: "manage" },
+  { t: "坚持讲道理，讲到 TA 同意为止", d: "expr" },
+  { t: "懒得争了，按 TA 说的办", d: "secure" },
+  { t: "先冷静分开，晚点再说", d: "bond" } ] },
+{ q: "对方的手机消息提示音一直响，你的心态是：", opts: [
+  { t: "毫不在意，各看各的手机很正常", d: "secure" },
+  { t: "有点好奇，偶尔瞟一眼是谁", d: "indep" },
+  { t: "会直接问：「谁呀，聊什么呢」", d: "expr" },
+  { t: "不问也不看，但心里有点硌硬", d: "bond" } ] },
+{ q: "父母对你们的婚姻生活提出意见（怎么带孩子/怎么花钱）时，你会：", opts: [
+  { t: "先和伴侣统一口径，再一起回应长辈", d: "manage" },
+  { t: "爸妈说得也有道理，回头劝劝伴侣", d: "secure" },
+  { t: "明确站伴侣这边，私下再和父母沟通", d: "bond" },
+  { t: "谁的事谁处理，互不干涉对方父母", d: "indep" } ] },
+{ q: "对方买了一杯你最喜欢的奶茶回来，你心里：", opts: [
+  { t: "甜到心里：「你居然记得我爱喝这个」", d: "expr", love: "act" },
+  { t: "挺开心的，觉得 TA 越来越懂事了", d: "manage" },
+  { t: "「乱花钱，家里还有水果」", d: "bond" },
+  { t: "谢谢，但下次买之前问问我更好", d: "indep" } ] },
+{ q: "夜深了，你躺下后脑子里在想感情的事吗？", opts: [
+  { t: "会想今天有没有哪句话说得不好", d: "bond" },
+  { t: "会盘算下周末带 TA 去哪玩", d: "manage" },
+  { t: "会想 TA 是不是对我有点冷淡了", d: "secure" },
+  { t: "沾枕头就着，没什么好想的", d: "indep" } ] },
+{ q: "「保鲜」对长期感情来说，你觉得最重要的是：", opts: [
+  { t: "保持吸引力，各自优秀又互相欣赏", d: "indep" },
+  { t: "有仪式感，节日惊喜和旅行不能少", d: "manage" },
+  { t: "无话不谈，随时可以说真心话", d: "expr" },
+  { t: "踏实过日子，平淡就是福", d: "bond" } ] },
+{ q: "对方最近总是很晚回家，你的真实感受更接近：", opts: [
+  { t: "担心 TA 太拼了，想帮 TA 减压", d: "manage" },
+  { t: "一个人吃饭挺冷清的，有点委屈", d: "secure" },
+  { t: "正好自由，做点自己的事", d: "indep" },
+  { t: "有点不爽，回家想说几句", d: "expr" } ] },
+{ q: "如果用一种角色形容你在感情中的样子，你会选：", opts: [
+  { t: "暖炉：默默把生活打理得温暖妥帖", d: "manage" },
+  { t: "定心丸：天塌下来有我顶着", d: "secure" },
+  { t: "小太阳：把爱意挂在嘴边也放在心里", d: "expr" },
+  { t: "风筝：有自己的天空，但线在彼此手里", d: "indep" } ] },
+{ q: "你们吵架最常因为什么？", opts: [
+  { t: "TA 不听我说话/敷衍我", d: "expr" },
+  { t: "生活习惯和家务分工", d: "manage" },
+  { t: "TA 对我态度冷淡，让我多想", d: "secure" },
+  { t: "为对方父母/亲戚的事", d: "bond" } ] },
+{ q: "关于「个人空间」，你的态度是：", opts: [
+  { t: "再亲密也需要各自独处的时间", d: "indep" },
+  { t: "有点依赖 TA 的陪伴，独处会不安", d: "secure" },
+  { t: "看状态，忙时各忙，闲时黏一起", d: "manage" },
+  { t: "更喜欢两个人腻在一起", d: "expr" } ] }
+,
+{ q: "对方说「随便」时问你晚上吃什么，你会：", opts: [
+  { t: "报几个选项让 TA 挑，总能定下来", d: "manage" },
+  { t: "「行，那就随便」，我也懒得想", d: "bond" },
+  { t: "直接订 TA 平时最爱吃的那家", d: "expr", love: "act" },
+  { t: "各吃各的也行，不用强求一起", d: "indep" } ] },
+{ q: "你们对「AA 制」和「一起花」的看法更接近：", opts: [
+  { t: "既然是一家人，钱放一起花才像过日子", d: "manage" },
+  { t: "经济独立是底气，花自己的钱硬气", d: "indep" },
+  { t: "谁挣得多谁多担点，别让对方委屈", d: "expr" },
+  { t: "怎么都行，别为钱伤感情就好", d: "bond" } ] },
+{ q: "对方精心为你做了一顿饭，味道其实一般，你会：", opts: [
+  { t: "大口吃完，先夸再委婉提改进", d: "expr", love: "words" },
+  { t: "如实说「有点咸」，下次改进就好", d: "bond" },
+  { t: "默默吃完，心里给 TA 点赞", d: "secure" },
+  { t: "感恩这份心意，帮 TA 收拾厨房", d: "manage", love: "act" } ] },
+{ q: "TA 又忘了倒垃圾（说过很多次），你会：", opts: [
+  { t: "叹口气自己去倒，下次接着提醒", d: "secure" },
+  { t: "当场严肃谈一次：「家务要共同承担」", d: "expr" },
+  { t: "算了算了，我顺手就倒了", d: "manage" },
+  { t: "冷处理，故意也不干等 TA 反应", d: "bond" } ] },
+{ q: "你理想中的周末二人时光是：", opts: [
+  { t: "一起做饭追剧，柴米油盐也甜", d: "manage", love: "time" },
+  { t: "出门看展逛街，拍很多照片", d: "expr" },
+  { t: "各自看各自的书，同一屋檐下安静待着", d: "indep" },
+  { t: "睡到自然醒，点个外卖随心过", d: "bond" } ] },
+{ q: "对方在你朋友面前开了个让你尴尬的玩笑，你会：", opts: [
+  { t: "当场笑着圆过去，回家再跟 TA 说", d: "bond" },
+  { t: "当场就变了脸，让 TA 下不来台", d: "expr" },
+  { t: "不在意，TA 开玩笑本来就没恶意", d: "secure" },
+  { t: "找机会也调侃回去，礼尚往来", d: "manage" } ] },
+{ q: "如果 TA 有个升职机会但要异地两年，你会：", opts: [
+  { t: "支持 TA 去，感情经得起距离考验", d: "indep" },
+  { t: "全力支持，认真规划两个人的探亲计划", d: "manage" },
+  { t: "嘴上支持，心里已经开始焦虑不安", d: "secure" },
+  { t: "希望 TA 优先考虑家庭，一起商量再定", d: "bond" } ] },
+{ q: "你们表达「我爱你」或类似情话的频率是：", opts: [
+  { t: "高频，一天不甜一下就难受", d: "expr", love: "words" },
+  { t: "偶尔，特殊时刻才说出口", d: "indep" },
+  { t: "我常说，TA 比较含蓄", d: "expr" },
+  { t: "几乎不说，但做出来的事都是爱", d: "manage", love: "act" } ] },
+{ q: "发现对方的消费超出预算（买了贵重物品），你会：", opts: [
+  { t: "先了解 TA 为什么喜欢，再谈预算", d: "manage" },
+  { t: "先不痛快一阵，忍不住念叨几句", d: "expr" },
+  { t: "TA 开心就好，钱再挣嘛", d: "secure" },
+  { t: "各自的钱各自定，我的规矩是我的", d: "indep" } ] },
+{ q: "你更希望对方用哪种方式安慰你？", opts: [
+  { t: "什么都不说，就是抱抱我", d: "secure", love: "touch" },
+  { t: "认真听我说完，肯定我的感受", d: "expr", love: "words" },
+  { t: "帮我做点什么，把问题解决了", d: "manage", love: "act" },
+  { t: "带我出去走走，转移注意力", d: "bond", love: "time" } ] },
+{ q: "你们的亲密接触（牵手/拥抱/亲吻）频率：", opts: [
+  { t: "很多，出门牵手是习惯", d: "expr", love: "touch" },
+  { t: "一般，感情好但不常表现出来", d: "indep" },
+  { t: "我主动多，TA 回应相对少", d: "secure" },
+  { t: "老夫老妻了，全靠意会", d: "manage" } ] },
+{ q: "对方提议一起培养个共同爱好，你会：", opts: [
+  { t: "太好了！马上列个清单挑一个", d: "manage", love: "time" },
+  { t: "配合参与，但我还是更喜欢自己的爱好", d: "indep" },
+  { t: "只要 TA 开心，我都能试试", d: "secure" },
+  { t: "试了几个都半途而废，随缘吧", d: "bond" } ] },
+{ q: "当 TA 情绪失控冲你发火时（事后会道歉），你会：", opts: [
+  { t: "等 TA 平静后认真谈：发脾气解决不了问题", d: "manage" },
+  { t: "当场怼回去，凭什么我要受着", d: "expr" },
+  { t: "默默受着， TA 压力大我知道", d: "secure" },
+  { t: "暂时躲开，等双方都消气再说", d: "bond" } ] },
+{ q: "你对「报备行踪」的看法是：", opts: [
+  { t: "主动报备，让 TA 安心是种体贴", d: "manage" },
+  { t: "到哪里说一声可以，但别查岗", d: "indep" },
+  { t: "不报备我会胡思乱想", d: "secure" },
+  { t: "夫妻之间何必报备，太见外", d: "bond" } ] },
+{ q: "你们家中「谁迁就谁」更多？", opts: [
+  { t: "我迁就 TA 多，想维持家的和睦", d: "manage" },
+  { t: "TA 迁就我多，我脾气比较直", d: "expr" },
+  { t: "差不多，互相迁就才长久", d: "bond" },
+  { t: "各过各的，没什么可迁就的", d: "indep" } ] },
+{ q: "深夜对方发来一句「睡了吗，有点想你了」，你会：", opts: [
+  { t: "心里一暖，立刻回一大段情话", d: "expr", love: "words" },
+  { t: "虽然困，还是马上打视频过去", d: "secure", love: "time" },
+  { t: "「早点睡吧」，明天再聊", d: "manage" },
+  { t: "白天不是刚见过嘛，奇怪", d: "indep" } ] },
+{ q: "如果要给你们的感情现状打个分（满分 10），你会打：", opts: [
+  { t: "8-10 分：我们一直在用心经营", d: "manage" },
+  { t: "6-7 分：还不错，但有点平淡了", d: "bond" },
+  { t: "分数不重要，TA 怎么看我才重要", d: "secure" },
+  { t: "不好说，我们对感情的期待不太一样", d: "indep" } ] },
+{ q: "你们因为「TA 朋友聚会带不带我」产生过分歧吗？", opts: [
+  { t: "带！我们和朋友玩都爱带上对方", d: "manage", love: "time" },
+  { t: "不带，各自有各自的圈子挺好", d: "indep" },
+  { t: "不带我会失落，是我不够重要吗", d: "secure" },
+  { t: "带不带随缘，我没那么在意", d: "bond" } ] },
+{ q: "你觉得「好的感情」里，两个人应该是：", opts: [
+  { t: "亲密有间，像两棵并肩生长的树", d: "indep" },
+  { t: "如胶似漆，谁也离不开谁", d: "secure" },
+  { t: "像合伙人：目标一致，分工明确", d: "manage" },
+  { t: "像朋友+恋人：聊得来最要紧", d: "expr" } ] },
+{ q: "TA 随口说想要某样东西很久了，你会：", opts: [
+  { t: "偷偷记下，找机会给 TA 惊喜", d: "manage", love: "gift" },
+  { t: "直接问 TA 要不要现在就买", d: "expr" },
+  { t: "记住了，等过节作为礼物一起给", d: "manage", love: "gift" },
+  { t: "想要就自己买呀，成年人都这样", d: "indep" } ] }
+/* __MORE_QUESTIONS_21_40__ */
+,
+{ q: "《爱语专项》最让你感到「被爱着」的瞬间是：", opts: [
+  { t: "TA 认真夸我、肯定我的时候", d: "expr", love: "words" },
+  { t: "TA 放下手机专心陪我的时候", d: "manage", love: "time" },
+  { t: "TA 记得我说过的小愿望并实现时", d: "secure", love: "gift" },
+  { t: "TA 默默帮我分担了难事的时候", d: "manage", love: "act" } ] },
+{ q: "《爱语专项》情人节你会更希望收到：", opts: [
+  { t: "一封手写的长信/一段走心的话", d: "expr", love: "words" },
+  { t: "一整天专属的二人时光", d: "manage", love: "time" },
+  { t: "一份用心挑选的礼物", d: "secure", love: "gift" },
+  { t: "一个用力的拥抱和亲吻", d: "expr", love: "touch" } ] },
+{ q: "《爱语专项》如果 TA 一周都不能陪你，哪种补偿最治愈你？", opts: [
+  { t: "每天一条认真写的长消息", d: "expr", love: "words" },
+  { t: "回来后一整天的二人世界", d: "manage", love: "time" },
+  { t: "带回来一件「看到就想起你」的东西", d: "secure", love: "gift" },
+  { t: "把家里缺的东西都悄悄补齐", d: "manage", love: "act" } ] },
+{ q: "《爱语专项》下面哪种「日常小事」最打动你？", opts: [
+  { t: "出门前一句「今天也加油哦」", d: "expr", love: "words" },
+  { t: "散步时一直牵着不松手", d: "expr", love: "touch" },
+  { t: "把我喜欢吃的菜转到我跟前", d: "manage", love: "act" },
+  { t: "睡前留一盏灯等我回家", d: "secure", love: "act" } ] },
+{ q: "《爱语专项》你和 TA 表达爱的方式，更像哪种？", opts: [
+  { t: "嘴甜，夸人和情话信手拈来", d: "expr", love: "words" },
+  { t: "创造相处机会，约会安排得明明白白", d: "manage", love: "time" },
+  { t: "爱买小东西，把心思变成礼物", d: "manage", love: "gift" },
+  { t: "行动派，用做事说话", d: "manage", love: "act" } ] },
+{ q: "《爱语专项》当你生病不舒服时，最希望 TA：", opts: [
+  { t: "守在旁边不停嘘寒问暖", d: "expr", love: "words" },
+  { t: "请假陪我一整天", d: "manage", love: "time" },
+  { t: "买来我从小最爱吃的东西", d: "secure", love: "gift" },
+  { t: "默默熬粥拿药把我照顾好", d: "manage", love: "act" } ] },
+{ q: "《爱语专项》看电影时你们的位置：", opts: [
+  { t: "全程十指相扣，一边看一边咬耳朵", d: "expr", love: "touch" },
+  { t: "头靠着头，看完认真讨论剧情", d: "manage", love: "time" },
+  { t: "TA 买的票，还准备了我爱喝的饮料", d: "secure", love: "gift" },
+  { t: "各自安静看片，散场一起吃夜宵", d: "indep", love: "act" } ] },
+{ q: "《爱语专项》「仪式感」对你来说最重要的是：", opts: [
+  { t: "说出口的爱与承诺", d: "expr", love: "words" },
+  { t: "两个人认真共度的时间", d: "manage", love: "time" },
+  { t: "看得见摸得着的心意", d: "secure", love: "gift" },
+  { t: "落到实处的体贴与照顾", d: "manage", love: "act" } ] },
+{ q: "十年后的你们，你希望画面是：", opts: [
+  { t: "还能像现在一样打闹说笑，眼里有光", d: "expr" },
+  { t: "依然每年留时间只属于两个人去旅行", d: "manage" },
+  { t: "家庭稳固，孩子和老人都妥帖安好", d: "secure" },
+  { t: "各自有事业有爱好，彼此是最稳的底气", d: "indep" } ] },
+{ q: "最后一道：此刻看着身边这个人的名字，你心里冒出的第一个词是：", opts: [
+  { t: "「谢谢」——谢谢你一直都在", d: "manage" },
+  { t: "「爱你」——还是好喜欢", d: "expr" },
+  { t: "「希望」——希望我们能一直好好的", d: "secure" },
+  { t: "「一起」——往后的路一起走", d: "bond" } ] }
+];
+
+/* ================================================================
+   启动
+================================================================ */
+initStart();
+</script>
+</body>
+</html>
