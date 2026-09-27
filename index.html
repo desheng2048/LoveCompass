@@ -138,6 +138,26 @@ h1, h2 { font-weight: 700; }
 }
 #adv-card li:last-child, #sug-card li:last-child { border-bottom: none; }
 #adv-card li .ic, #sug-card li .ic { flex-shrink: 0; margin-top: 1px; }
+
+/* ================= 细评与分档建议 ================= */
+#behavior-card li {
+  list-style: none; font-size: 14px; line-height: 1.85; color: #5d4450;
+  padding: 11px 2px; display: flex; gap: 10px; align-items: flex-start;
+  border-bottom: 1px dashed #f3d9dc;
+}
+#behavior-card li:last-child { border-bottom: none; }
+#behavior-card li .ic { flex-shrink: 0; margin-top: 2px; }
+#behavior-card li b { color: #c2576f; }
+.dim-row { margin-bottom: 14px; }
+.dim-row:last-child { margin-bottom: 0; }
+.dim-line { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.dim-label { font-size: 13.5px; font-weight: 700; color: #7a4a5a; flex: 0 0 110px; }
+.dim-track { flex: 1; height: 7px; background: #f6e3e7; border-radius: 99px; overflow: hidden; }
+.dim-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #e8617c, #ff8f6b); }
+.dim-val { font-size: 12.5px; color: #b06a80; flex: 0 0 36px; text-align: right; }
+.dim-tip { font-size: 13.5px; line-height: 1.8; color: #6d4d5c; padding-left: 2px; }
+#sug-card h3 { font-size: 14px; color: #d94f6e; margin: 4px 0 8px; letter-spacing: 1px; }
+#sug-card h3 + li { border-top: none; }
 #love-card { text-align: center; padding: 22px; }
 #love-name { font-size: 21px; color: #e8617c; font-weight: 700; margin-top: 4px; letter-spacing: 2px; }
 #love-desc { font-size: 14px; color: #7a5a66; line-height: 1.8; margin-top: 10px; }
@@ -232,14 +252,16 @@ h1, h2 { font-weight: 700; }
     <div class="card" id="adv-card"></div>
     <div id="sec-title">🔍 你的盲区</div>
     <div class="card" id="adv-card2"></div>
-    <div id="sec-title">🌱 以后这样做，感情会更好</div>
-    <div class="card" id="sug-card"></div>
+    <div id="sec-title">💬 咨询师细评你的选择</div>
+    <div class="card" id="behavior-card"></div>
     <div id="sec-title">💌 你的爱之语言</div>
     <div class="card" id="love-card">
       <div style="font-size:30px">🎁</div>
       <div id="love-name"></div>
       <div id="love-desc"></div>
     </div>
+    <div id="sec-title">🌱 你的个性化行动方案</div>
+    <div class="card" id="sug-card"></div>
     <div id="quote-card">
       <div id="quote-text"></div>
       <div id="quote-hint">📷 截下这张卡片，分享给另一半吧</div>
@@ -271,6 +293,61 @@ const LOVE_LANGS = {
   gift:  { name: "用心礼物", icon: "🎁", desc: "礼物贵不在价，在于「TA 居然记得」。一份看见你、想着你的小物件，就能让你开心很久。" },
   act:   { name: "服务行动", icon: "🛠️", desc: "嘴上的甜言不如落地的体贴。TA 默默修好台灯、做好一顿饭，你就知道：这就是爱。" },
   touch: { name: "身体接触", icon: "🤗", desc: "一个拥抱胜过千言万语。牵手、依偎、出门前的吻，都是你确认「我们很好」的方式。" }
+};
+
+/* ---- 行为标签库（心理咨询师视角）：用户选项命中后，报告逐条细评 ----
+   level: warn=需要关注  good=积极信号  info=中性特点 */
+const TAGS = {
+  suppress:      { level: "warn", icon: "🤐", name: "压抑表达", text: "你习惯把情绪先咽下去——短期维护了和平，长期却让委屈悄悄积蓄。情绪不会消失，只会换一种方式冒出来：或变成冷淡，或变成某天莫名其妙的爆发。试着把「算了」换成「其实我有点在意」。" },
+  avoid_conflict:{ level: "warn", icon: "🏃", name: "回避冲突", text: "遇到分歧你倾向绕开——但被搁置的问题不会自己解决，只会在下一次以更大的声音出现。健康的关系不是不吵架，而是吵完还愿意回来把话说完。" },
+  explode:       { level: "warn", icon: "🌋", name: "情绪急燃", text: "你的情绪来得快、火力猛，往往话赶话就说出了伤人的重话。给情绪装一个「延迟阀」：感觉血往上涌时，先深呼吸 10 秒或喊暂停——你迟早要表达，但可以选不伤人的方式。" },
+  anxious_scan:  { level: "warn", icon: "🔭", name: "焦虑扫描", text: "你容易反复琢磨对方的行为细节，从蛛丝马迹里寻找「不爱了」的证据。但焦虑越喂养越大，试探只会消耗信任。把猜换成问：「我有点不安，想跟你确认一件事」——直接沟通是焦虑最好的解药。" },
+  over_give:     { level: "warn", icon: "🫂", name: "过度付出", text: "你总在迁就、包揽、先低头——付出本身很珍贵，但不求回报的付出会累积隐性委屈，也可能让对方习惯性缺位。记得：你的需求同样重要，说出来不是添麻烦。" },
+  test_probe:    { level: "warn", icon: "🎣", name: "试探代替表达", text: "你常「暗示」或用行为测试对方，希望 TA 自动读懂你。但猜谜式沟通的成功率很低，落空后的失落也只有自己知道。直接说出想要什么，不丢人，反而高效又体面。" },
+  cold_response: { level: "warn", icon: "🧊", name: "回应降温", text: "你的回应偏简短平淡——也许是无心，但对方接收到的信号可能是「我不重要」。语言是关系的温度计，多加一个字、多问一句，温度就回来了。" },
+  neglect_signal:{ level: "warn", icon: "🕳️", name: "仪式感缺位", text: "你不太在意节日、纪念或小心思——但你不在意的，可能正是对方偷偷期待的。仪式感不是形式，是在说「你对我很重要」。每年留几个「必须认真」的日子吧。" },
+  self_space_high:{ level: "info", icon: "🎈", name: "高空间需求", text: "你很看重个人空间和独立性——这是健康的自我边界。只需留意别让「各过各的」滑向「各不想干」：空间给彼此，主动靠近也要给彼此。" },
+  merge_expect:  { level: "warn", icon: "🧲", name: "融合期待", text: "你期待亲密无间、不分你我——热恋期很美，长期却容易挤压对方也委屈自己。成熟的爱是两棵并肩的树：根紧握，枝叶却各自生长。" },
+  open_talk:     { level: "good", icon: "🗣️", name: "坦诚沟通", text: "你愿意把感受说出口，这是亲密关系里最珍贵的能力之一——问题摊开得早，就积不成大雷。继续保持，并留意在对方表达时先听完再回应。" },
+  repair_active: { level: "good", icon: "🔧", name: "主动修复", text: "你愿意先伸手、先破冰——研究表明，主动修复的意愿是预测关系长久最重要的指标之一。别把这当成「输」，你赢的是整段关系。" },
+  ritual:        { level: "good", icon: "🕯️", name: "仪式感经营", text: "你相信爱需要被郑重对待——节日、惊喜、专属的小传统，都是你们关系的黏合剂。记得偶尔听听对方想要的仪式是什么，别只按自己的剧本排期。" },
+  empathy_first: { level: "good", icon: "💞", name: "共情优先", text: "你总能先接住对方的情绪，再处理事情——这是咨询师都羡慕的天赋。也请留一半温柔给自己：你的情绪同样值得被好好接住。" },
+  co_plan:       { level: "good", icon: "🤝", name: "共同规划", text: "遇事你倾向商量着来，把「你和我」过成「我们」——这种伙伴感是长期关系最踏实的底座。继续保持大事同商、小事互谅。" },
+  trust_base:    { level: "good", icon: "🛡️", name: "信任底色", text: "你给伴侣充分的信任，不查不疑——安全感是关系里最舒服的土壤。保持这份从容，也大方告诉对方「你的信任从何而来」，让 TA 知道怎样被你安心地爱着。" },
+  boundary_clear:{ level: "good", icon: "🚪", name: "边界清晰", text: "你在原生家庭、朋友与伴侣之间划得清界限，不让第三股力量搅动你们的小家——婚姻稳定的关键能力，你已具备。" },
+  act_love:      { level: "good", icon: "🛠️", name: "行动派爱人", text: "你不常把爱挂嘴边，但做事从不缺席。提醒你：对方未必能自动破译行动里的爱，偶尔配上语言说明，爱意传达效率翻倍。" },
+  quiet_love:    { level: "info", icon: "🌙", name: "内敛的爱", text: "你的爱安静、不张扬——细腻但容易被错过。爱意不需要变多，只需要偶尔「显形」：一个拥抱、一句晚安，就是你的语言被听见的时刻。" },
+  words_love:    { level: "info", icon: "💬", name: "言语表达", text: "你习惯用语言传递爱与在乎——被听见的概率高，但也请留意语气：同一句话，软着说和呛着说，落在对方心里是两个世界。" }
+};
+const TAG_KEYS = Object.keys(TAGS);
+
+/* ---- 五维分档建议（婚姻专家视角）：同一维度、不同分数段，建议完全不同 ---- */
+const DIM_ADVICE = {
+  expr: {
+    low:  "你们的关系里，爱意大多藏在行动里没说出口。本周起每天说一句「具体的欣赏」——不是「你真好」，而是「今天你主动接孩子，我特别感动」。被说出口的爱，才能被真正接收到。",
+    mid:  "你不缺表达，但可能集中在风平浪静的时候。练习在分歧时刻也说感受：「我现在有点委屈，但我想跟你好好聊」——冲突中的坦诚，比甜蜜时的情话更珍贵。",
+    high: "表达是你的天赋。注意配比：多把话筒递给对方——「你最近有什么想说的吗？」——让表达从独白变成双向流动，关系才不会变成你的个人演讲台。"
+  },
+  bond: {
+    low:  "你们容易陷入冷战或翻旧账。引入「24 小时规则」：冲突后 24 小时内必须重启对话，哪怕只说一句「昨晚我态度不好，我们再聊聊好吗」——裂缝不过夜，感情才不过耗。",
+    mid:  "你们的冲突处理「过得去」，但常有没清零的遗留情绪。每周一次 15 分钟「小家庭会议」：这周我做得好的、想改进的、希望对方做的——小不满定期清仓，别攒成大雷。",
+    high: "你们处理分歧的方式已经很成熟。提醒一句：允许冲突存在——偶尔的小争执是关系的免疫训练，追求「零冲突」反而会让真实想法没有出口。"
+  },
+  manage: {
+    low:  "你们的日子可能被工作和家务填满，「我们」的时间被挤没了。本月强制安排一次两小时约会：不带娃、不谈家务、手机静音。经营感情的时间不是浪费，是回报率最高的投资。",
+    mid:  "你们有经营意识，但可能开始套路化。每月解锁一件两人都没做过的小事——新餐馆、新路线、新游戏。新鲜感不是等来的，是设计出来的。",
+    high: "你们很会经营，注意别把仪式感变成 KPI。偶尔留一个什么都不安排的周末，一起窝在沙发上发呆——松弛感，也是亲密的一部分。"
+  },
+  secure: {
+    low:  "你的不安常来自「猜」。把「你是不是不爱我了」翻译成「我今天有点失落，想要一个抱抱」——直接索取比试探有效一百倍。也请对方给你确定的回应：安全感是两个人一起盖的房子。",
+    mid:  "你的安全感整体稳定，偶有波动。建立一个「安心仪式」：每天睡前 10 分钟聊聊今天——稳定可预期的连接，是焦虑最好的定心丸。",
+    high: "你是伴侣的安全港湾。注意别把「稳」变成「不需要」：偶尔也示示弱，让对方有机会照顾你——好的关系，是互相需要出来的。"
+  },
+  indep: {
+    low:  "你们可能黏得太紧，把全部期待压在对方身上。本周各安排一晚「独处夜」：各自做喜欢的事——适度的距离感，会让下一次靠近更有引力。",
+    mid:  "你们的亲疏平衡不错。留意失衡信号：如果你开始用「忙」回避约会，或对方开始「报备式」聊天——那就是该主动靠近一点的时刻。",
+    high: "你的独立性是优点，但注意接住伴侣靠近的信号。爱不只是给空间，也是「我在」——每天一次主动的关心，让 TA 知道你一直都在。"
+  }
 };
 
 /* ---- 8 种感情定位类型：判定条件按顺序短路匹配，最后有兜底 ---- */
@@ -586,9 +663,45 @@ function renderResult() {
   const li = (icon, txt) => '<li><span class="ic">' + icon + "</span><span>" + txt + "</span></li>";
   $("adv-card").innerHTML = t.adv.map(x => li("✅", x)).join("");
   $("adv-card2").innerHTML = t.blind.map(x => li("⚠️", x)).join("");
-  const lowest = DIM_KEYS.reduce((a, b) => s.pct[a] <= s.pct[b] ? a : b);
-  $("sug-card").innerHTML = t.tips.map(x => li("🌱", x)).join("") +
-    li("🎯", "<b>针对你的短板「" + DIMS[lowest].name + "」</b>：" + LOW_DIM_TIP[lowest]);
+  /* ---- 咨询师细评：引用用户实际选择，逐条点评 ---- */
+  const trimQ = q => { const s = q.replace(/[：:]\s*$/, ""); return s.length > 20 ? s.slice(0, 20) + "…" : s; };
+  const noteHits = [], tagCnt = {};
+  QUESTIONS.forEach((q, qi) => {
+    const ai = state.answers[qi];
+    const picks = Array.isArray(ai) ? ai : (typeof ai === "number" && ai >= 0 ? [ai] : []);
+    picks.forEach(pi => {
+      const opt = q.opts[pi];
+      if (!opt) return;
+      if (opt.note) noteHits.push({ qtext: q.q, note: opt.note });
+      if (opt.tag) tagCnt[opt.tag] = (tagCnt[opt.tag] || 0) + 1;
+    });
+  });
+  const bh = [];
+  noteHits.slice(0, 4).forEach(n =>
+    bh.push(li("💬", "<b>「" + trimQ(n.qtext) + "」</b><br>" + n.note)));
+  const warnHits = TAG_KEYS.filter(k => TAGS[k].level === "warn" && tagCnt[k]).sort((a, b) => tagCnt[b] - tagCnt[a]).slice(0, 4);
+  warnHits.forEach(k =>
+    bh.push(li(TAGS[k].icon, "<b>" + TAGS[k].name + "（出现 " + tagCnt[k] + " 次）</b><br>" + TAGS[k].text)));
+  if (warnHits.length < 2) {
+    TAG_KEYS.filter(k => TAGS[k].level === "good" && tagCnt[k]).sort((a, b) => tagCnt[b] - tagCnt[a]).slice(0, 2)
+      .forEach(k => bh.push(li(TAGS[k].icon, "<b>" + TAGS[k].name + "（出现 " + tagCnt[k] + " 次）</b><br>" + TAGS[k].text)));
+  }
+  $("behavior-card").innerHTML = bh.length ? bh.join("") :
+    li("🌿", "你的选择整体平稳，没有触发明显的预警信号。继续保持倾听与表达，就是最好的日常经营。");
+  /* ---- 个性化行动方案：五维分档建议（同类型不同分数，建议不同）+ 类型核心策略 ---- */
+  let adv = '<h3>📌 五维分档建议（按你的实际得分定制）</h3>';
+  DIM_KEYS.forEach(k => {
+    const v = s.pct[k];
+    const band = v < 40 ? "low" : (v >= 70 ? "high" : "mid");
+    adv += '<div class="dim-row">' +
+      '<div class="dim-line"><span class="dim-label">' + DIMS[k].name + ' <span style="font-weight:400">' + v + '分</span></span>' +
+      '<span class="dim-track"><span class="dim-fill" style="display:block;width:' + v + '%"></span></span>' +
+      '<span class="dim-val">' + (band === "low" ? "待加强" : band === "mid" ? "良好" : "优势") + "</span></div>" +
+      '<div class="dim-tip">' + DIM_ADVICE[k][band] + "</div></div>";
+  });
+  adv += '<h3 style="margin-top:18px">🎯 针对你的类型「' + t.name + "」</h3>";
+  adv += t.tips.slice(0, 2).map(x => li("🌱", x)).join("");
+  $("sug-card").innerHTML = adv;
   if (s.topLove) {
     const L = LOVE_LANGS[s.topLove];
     document.querySelector("#love-card > div").textContent = L.icon;
@@ -664,151 +777,151 @@ $("btn-restart").onclick = () => {
 ================================================================ */
 const QUESTIONS = [
 { q: "对方今天换了新发型/新衣服，满眼期待地看你，你会：", opts: [
-  { t: "第一时间夸出口：「也太好看了吧！」", d: "expr", love: "words" },
-  { t: "心里觉得不错，但嘴上不一定说出来", d: "indep" },
+  { t: "第一时间夸出口：「也太好看了吧！」", d: "expr", love: "words", tag: "open_talk" },
+  { t: "心里觉得不错，但嘴上不一定说出来", d: "indep", tag: "quiet_love" },
   { t: "凑近认真打量，再给点具体的建议", d: "manage" },
-  { t: "「挺好的」——简短回应就继续忙自己的", d: "bond" } ] },
+  { t: "「挺好的」——简短回应就继续忙自己的", d: "bond", tag: "cold_response" } ] },
 { q: "周末你精心准备了约会，对方临时加班放了鸽子，你会：", opts: [
-  { t: "有点失落，但等 TA 回来撒个娇求补偿", d: "secure" },
-  { t: "压住火气说「没关系」，闷闷地自己消化", d: "bond" },
-  { t: "直接说出感受：「我期待了好久，挺失落的」", d: "expr" },
-  { t: "正好，自己约朋友玩，也挺自在", d: "indep" } ] },
+  { t: "有点失落，但等 TA 回来撒个娇求补偿", d: "secure", tag: "open_talk" },
+  { t: "压住火气说「没关系」，闷闷地自己消化", d: "bond", tag: "suppress" },
+  { t: "直接说出感受：「我期待了好久，挺失落的」", d: "expr", tag: "open_talk" },
+  { t: "正好，自己约朋友玩，也挺自在", d: "indep", tag: "self_space_high" } ] },
 { q: "你们吵架后，通常谁先开口和好？", opts: [
-  { t: "我，冷战后先低头的人往往是我", d: "manage" },
-  { t: "TA 先来哄我，我才顺台阶下", d: "secure" },
-  { t: "差不多同时，谁也憋不住太久", d: "expr" },
-  { t: "经常就这样不了了之，慢慢淡过去", d: "bond" } ] },
+  { t: "我，冷战后先低头的人往往是我", d: "manage", tag: "over_give", note: "习惯性先低头的人，往往也在积累隐性委屈——和好值得，但记得让对方也练习走近你一次。" },
+  { t: "TA 先来哄我，我才顺台阶下", d: "secure", tag: "test_probe", note: "等待被哄会让道歉变成 TA 的义务。偶尔主动一次，你会发现先伸手的人其实更有力量。" },
+  { t: "差不多同时，谁也憋不住太久", d: "expr", tag: "open_talk" },
+  { t: "经常就这样不了了之，慢慢淡过去", d: "bond", tag: "avoid_conflict" } ] },
 { q: "对方问你「今天过得怎么样」，你最可能的回答是：", opts: [
-  { t: "详细讲一遍，开心的事吐槽的事都想说", d: "expr", love: "time" },
-  { t: "「就那样呗」，反问 TA 一句", d: "indep" },
-  { t: "挑重点说，顺便关心 TA 今天累不累", d: "manage" },
+  { t: "详细讲一遍，开心的事吐槽的事都想说", d: "expr", love: "time", tag: "open_talk" },
+  { t: "「就那样呗」，反问 TA 一句", d: "indep", tag: "cold_response" },
+  { t: "挑重点说，顺便关心 TA 今天累不累", d: "manage", tag: "empathy_first" },
   { t: "简短几句，更想赶紧休息", d: "bond" } ] },
 { q: "你们家谁管钱、谁规划开支？", opts: [
-  { t: "一起记账，大额消费商量着来", d: "manage" },
-  { t: "各管各的，花自己的钱最自在", d: "indep" },
-  { t: "TA 管，我懒得操心这些", d: "secure" },
-  { t: "谁脾气好听谁的，为钱吵架不值当", d: "bond" } ] },
+  { t: "一起记账，大额消费商量着来", d: "manage", tag: "co_plan" },
+  { t: "各管各的，花自己的钱最自在", d: "indep", tag: "self_space_high" },
+  { t: "TA 管，我懒得操心这些", d: "secure", tag: "trust_base" },
+  { t: "谁脾气好听谁的，为钱吵架不值当", d: "bond", tag: "avoid_conflict" } ] },
 { q: "纪念日快到了，你的真实状态是：", opts: [
-  { t: "早就偷偷订好了餐厅，还准备了小礼物", d: "manage", love: "gift" },
-  { t: "记得日期，觉得心意到了就行，不必隆重", d: "indep" },
-  { t: "暗示过几次想要惊喜，等着 TA 安排", d: "expr" },
-  { t: "日子过好每天都一样，纪念日是形式", d: "bond" } ] },
+  { t: "早就偷偷订好了餐厅，还准备了小礼物", d: "manage", love: "gift", tag: "ritual" },
+  { t: "记得日期，觉得心意到了就行，不必隆重", d: "indep", tag: "quiet_love" },
+  { t: "暗示过几次想要惊喜，等着 TA 安排", d: "expr", tag: "test_probe" },
+  { t: "日子过好每天都一样，纪念日是形式", d: "bond", tag: "neglect_signal" } ] },
 { q: "对方工作受挫，跟你倒苦水，你的第一反应是：", opts: [
-  { t: "先抱抱 TA，说「辛苦了，有我在」", d: "expr", love: "touch" },
+  { t: "先抱抱 TA，说「辛苦了，有我在」", d: "expr", love: "touch", tag: "empathy_first" },
   { t: "认真听完，帮 TA 分析问题出在哪", d: "manage" },
-  { t: "给 TA 独处空间，等 TA 想聊了再说", d: "indep" },
-  { t: "听着听着有点烦：「这有什么大不了的」", d: "bond" } ] },
+  { t: "给 TA 独处空间，等 TA 想聊了再说", d: "indep", tag: "self_space_high" },
+  { t: "听着听着有点烦：「这有什么大不了的」", d: "bond", tag: "neglect_signal" } ] },
 { q: "关于家务分工，更接近你们现状的是：", opts: [
-  { t: "有大致分工，谁有空谁多干点", d: "manage" },
+  { t: "有大致分工，谁有空谁多干点", d: "manage", tag: "co_plan" },
   { t: "我干得多，但经常忍不住念叨", d: "expr" },
-  { t: "我干得多，念叨也没用就忍了", d: "secure" },
+  { t: "我干得多，念叨也没用就忍了", d: "secure", tag: "suppress", note: "「念叨没用就忍了」是慢性消耗。家务的坑谁来填要谈清楚，你可以温和但坚定地重新分工。" },
   { t: "都很随意，乱一点也无妨", d: "bond" } ] },
 { q: "对方跟异性同事聊得很热络，你会：", opts: [
-  { t: "不太在意，信任 TA 也会保护好关系", d: "secure" },
-  { t: "嘴上不说，心里反复琢磨 TA 的聊天记录", d: "secure" },
-  { t: "直接说出在意：「我希望你们保持点距离」", d: "expr" },
-  { t: "各人有各人的社交，不管为好", d: "indep" } ] },
+  { t: "不太在意，信任 TA 也会保护好关系", d: "secure", tag: "trust_base" },
+  { t: "嘴上不说，心里反复琢磨 TA 的聊天记录", d: "secure", tag: "anxious_scan", note: "反复查看聊天记录缓解不了不安，只会喂养它。下次不安时，直接说出你的在意，比独自侦查更接近答案。" },
+  { t: "直接说出在意：「我希望你们保持点距离」", d: "expr", tag: "open_talk" },
+  { t: "各人有各人的社交，不管为好", d: "indep", tag: "self_space_high" } ] },
 { q: "你们上一次认真聊天（不谈家务孩子工作，只谈彼此）是多久前？", opts: [
-  { t: "这周就有，我们习惯随时聊", d: "manage", love: "time" },
-  { t: "一两个月前？想不起来了", d: "bond" },
-  { t: "我想聊，但 TA 总说累，改天吧", d: "expr" },
-  { t: "不聊天也挺好的，安静自在", d: "indep" } ] },
+  { t: "这周就有，我们习惯随时聊", d: "manage", love: "time", tag: "open_talk" },
+  { t: "一两个月前？想不起来了", d: "bond", tag: "neglect_signal" },
+  { t: "我想聊，但 TA 总说累，改天吧", d: "expr", tag: "suppress" },
+  { t: "不聊天也挺好的，安静自在", d: "indep", tag: "self_space_high" } ] },
 { q: "两个人意见不合、谁也说服不了谁时，你会：", opts: [
-  { t: "提议各自让一步，或找个折中方案", d: "manage" },
-  { t: "坚持讲道理，讲到 TA 同意为止", d: "expr" },
-  { t: "懒得争了，按 TA 说的办", d: "secure" },
+  { t: "提议各自让一步，或找个折中方案", d: "manage", tag: "co_plan" },
+  { t: "坚持讲道理，讲到 TA 同意为止", d: "expr", tag: "explode" },
+  { t: "懒得争了，按 TA 说的办", d: "secure", tag: "avoid_conflict" },
   { t: "先冷静分开，晚点再说", d: "bond" } ] },
 { q: "对方的手机消息提示音一直响，你的心态是：", opts: [
-  { t: "毫不在意，各看各的手机很正常", d: "secure" },
-  { t: "有点好奇，偶尔瞟一眼是谁", d: "indep" },
-  { t: "会直接问：「谁呀，聊什么呢」", d: "expr" },
-  { t: "不问也不看，但心里有点硌硬", d: "bond" } ] },
+  { t: "毫不在意，各看各的手机很正常", d: "secure", tag: "trust_base" },
+  { t: "有点好奇，偶尔瞟一眼是谁", d: "indep", tag: "anxious_scan" },
+  { t: "会直接问：「谁呀，聊什么呢」", d: "expr", tag: "open_talk" },
+  { t: "不问也不看，但心里有点硌硬", d: "bond", tag: "suppress" } ] },
 { q: "父母对你们的婚姻生活提出意见（怎么带孩子/怎么花钱）时，你会：", opts: [
-  { t: "先和伴侣统一口径，再一起回应长辈", d: "manage" },
-  { t: "爸妈说得也有道理，回头劝劝伴侣", d: "secure" },
-  { t: "明确站伴侣这边，私下再和父母沟通", d: "bond" },
-  { t: "谁的事谁处理，互不干涉对方父母", d: "indep" } ] },
+  { t: "先和伴侣统一口径，再一起回应长辈", d: "manage", tag: "boundary_clear" },
+  { t: "爸妈说得也有道理，回头劝劝伴侣", d: "secure", note: "先站父母再劝伴侣，容易让 TA 在你家孤立。顺序很重要：先和伴侣统一战线，再一起面对长辈——你们才是彼此的第一顺位。" },
+  { t: "明确站伴侣这边，私下再和父母沟通", d: "bond", tag: "boundary_clear" },
+  { t: "谁的事谁处理，互不干涉对方父母", d: "indep", tag: "self_space_high" } ] },
 { q: "对方买了一杯你最喜欢的奶茶回来，你心里：", opts: [
-  { t: "甜到心里：「你居然记得我爱喝这个」", d: "expr", love: "act" },
+  { t: "甜到心里：「你居然记得我爱喝这个」", d: "expr", love: "act", tag: "open_talk" },
   { t: "挺开心的，觉得 TA 越来越懂事了", d: "manage" },
   { t: "「乱花钱，家里还有水果」", d: "bond" },
-  { t: "谢谢，但下次买之前问问我更好", d: "indep" } ] },
+  { t: "谢谢，但下次买之前问问我更好", d: "indep", tag: "open_talk" } ] },
 { q: "夜深了，你躺下后脑子里在想感情的事吗？", opts: [
-  { t: "会想今天有没有哪句话说得不好", d: "bond" },
-  { t: "会盘算下周末带 TA 去哪玩", d: "manage" },
-  { t: "会想 TA 是不是对我有点冷淡了", d: "secure" },
+  { t: "会想今天有没有哪句话说得不好", d: "bond", tag: "anxious_scan", note: "睡前反刍对话是高敏感者的常见模式。试着把「我哪句说错了」换成「明天我想跟 TA 说点什么」——把复盘变成计划。" },
+  { t: "会盘算下周末带 TA 去哪玩", d: "manage", tag: "ritual" },
+  { t: "会想 TA 是不是对我有点冷淡了", d: "secure", tag: "anxious_scan" },
   { t: "沾枕头就着，没什么好想的", d: "indep" } ] },
 { q: "「保鲜」对长期感情来说，你觉得最重要的是：", multi: true, opts: [
   { t: "保持吸引力，各自优秀又互相欣赏", d: "indep" },
-  { t: "有仪式感，节日惊喜和旅行不能少", d: "manage" },
-  { t: "无话不谈，随时可以说真心话", d: "expr" },
-  { t: "踏实过日子，平淡就是福", d: "bond" } ] },
+  { t: "有仪式感，节日惊喜和旅行不能少", d: "manage", tag: "ritual" },
+  { t: "无话不谈，随时可以说真心话", d: "expr", tag: "open_talk" },
+  { t: "踏实过日子，平淡就是福", d: "bond", tag: "quiet_love" } ] },
 { q: "对方最近总是很晚回家，你的真实感受更接近：", opts: [
-  { t: "担心 TA 太拼了，想帮 TA 减压", d: "manage" },
-  { t: "一个人吃饭挺冷清的，有点委屈", d: "secure" },
-  { t: "正好自由，做点自己的事", d: "indep" },
-  { t: "有点不爽，回家想说几句", d: "expr" } ] },
+  { t: "担心 TA 太拼了，想帮 TA 减压", d: "manage", tag: "empathy_first" },
+  { t: "一个人吃饭挺冷清的，有点委屈", d: "secure", tag: "suppress", note: "委屈被独自消化时，会发酵成怨气。下次直接说：「你不在，我一个人吃饭挺冷清的」——示弱是亲密关系的润滑剂。" },
+  { t: "正好自由，做点自己的事", d: "indep", tag: "self_space_high" },
+  { t: "有点不爽，回家想说几句", d: "expr", tag: "open_talk" } ] },
 { q: "如果用一种角色形容你在感情中的样子，你会选：", opts: [
-  { t: "暖炉：默默把生活打理得温暖妥帖", d: "manage" },
+  { t: "暖炉：默默把生活打理得温暖妥帖", d: "manage", tag: "act_love" },
   { t: "定心丸：天塌下来有我顶着", d: "secure" },
-  { t: "小太阳：把爱意挂在嘴边也放在心里", d: "expr" },
-  { t: "风筝：有自己的天空，但线在彼此手里", d: "indep" } ] },
+  { t: "小太阳：把爱意挂在嘴边也放在心里", d: "expr", tag: "open_talk" },
+  { t: "风筝：有自己的天空，但线在彼此手里", d: "indep", tag: "self_space_high" } ] },
 { q: "你们吵架最常因为什么？", opts: [
-  { t: "TA 不听我说话/敷衍我", d: "expr" },
+  { t: "TA 不听我说话/敷衍我", d: "expr", tag: "open_talk" },
   { t: "生活习惯和家务分工", d: "manage" },
-  { t: "TA 对我态度冷淡，让我多想", d: "secure" },
+  { t: "TA 对我态度冷淡，让我多想", d: "secure", tag: "anxious_scan" },
   { t: "为对方父母/亲戚的事", d: "bond" } ] },
 { q: "关于「个人空间」，你的态度是：", opts: [
-  { t: "再亲密也需要各自独处的时间", d: "indep" },
-  { t: "有点依赖 TA 的陪伴，独处会不安", d: "secure" },
+  { t: "再亲密也需要各自独处的时间", d: "indep", tag: "self_space_high" },
+  { t: "有点依赖 TA 的陪伴，独处会不安", d: "secure", tag: "anxious_scan" },
   { t: "看状态，忙时各忙，闲时黏一起", d: "manage" },
-  { t: "更喜欢两个人腻在一起", d: "expr" } ] }
+  { t: "更喜欢两个人腻在一起", d: "expr", tag: "merge_expect" } ] }
 ,
 { q: "对方说「随便」时问你晚上吃什么，你会：", opts: [
-  { t: "报几个选项让 TA 挑，总能定下来", d: "manage" },
-  { t: "「行，那就随便」，我也懒得想", d: "bond" },
-  { t: "直接订 TA 平时最爱吃的那家", d: "expr", love: "act" },
-  { t: "各吃各的也行，不用强求一起", d: "indep" } ] },
+  { t: "报几个选项让 TA 挑，总能定下来", d: "manage", tag: "co_plan" },
+  { t: "「行，那就随便」，我也懒得想", d: "bond", tag: "cold_response" },
+  { t: "直接订 TA 平时最爱吃的那家", d: "expr", love: "act", tag: "act_love" },
+  { t: "各吃各的也行，不用强求一起", d: "indep", tag: "self_space_high" } ] },
 { q: "你们对「AA 制」和「一起花」的看法更接近：", opts: [
-  { t: "既然是一家人，钱放一起花才像过日子", d: "manage" },
-  { t: "经济独立是底气，花自己的钱硬气", d: "indep" },
+  { t: "既然是一家人，钱放一起花才像过日子", d: "manage", tag: "co_plan" },
+  { t: "经济独立是底气，花自己的钱硬气", d: "indep", tag: "self_space_high" },
   { t: "谁挣得多谁多担点，别让对方委屈", d: "expr" },
-  { t: "怎么都行，别为钱伤感情就好", d: "bond" } ] },
+  { t: "怎么都行，别为钱伤感情就好", d: "bond", tag: "avoid_conflict" } ] },
 { q: "对方精心为你做了一顿饭，味道其实一般，你会：", opts: [
-  { t: "大口吃完，先夸再委婉提改进", d: "expr", love: "words" },
-  { t: "如实说「有点咸」，下次改进就好", d: "bond" },
-  { t: "默默吃完，心里给 TA 点赞", d: "secure" },
-  { t: "感恩这份心意，帮 TA 收拾厨房", d: "manage", love: "act" } ] },
+  { t: "大口吃完，先夸再委婉提改进", d: "expr", love: "words", tag: "open_talk" },
+  { t: "如实说「有点咸」，下次改进就好", d: "bond", tag: "open_talk" },
+  { t: "默默吃完，心里给 TA 点赞", d: "secure", tag: "suppress", note: "你用沉默成全对方的心意，温柔但冒险——TA 可能永远不知道怎么做你会更开心。先夸再建议，是对彼此的诚实。" },
+  { t: "感恩这份心意，帮 TA 收拾厨房", d: "manage", love: "act", tag: "act_love" } ] },
 { q: "TA 又忘了倒垃圾（说过很多次），你会：", opts: [
-  { t: "叹口气自己去倒，下次接着提醒", d: "secure" },
-  { t: "当场严肃谈一次：「家务要共同承担」", d: "expr" },
-  { t: "算了算了，我顺手就倒了", d: "manage" },
-  { t: "冷处理，故意也不干等 TA 反应", d: "bond" } ] },
+  { t: "叹口气自己去倒，下次接着提醒", d: "secure", tag: "suppress", note: "「提醒没用就自己上」短期高效，长期却让分工永远学不会公平。把「我帮你倒这次」换成「这周垃圾归你了」，给对方担责任的机会。" },
+  { t: "当场严肃谈一次：「家务要共同承担」", d: "expr", tag: "open_talk" },
+  { t: "算了算了，我顺手就倒了", d: "manage", tag: "over_give" },
+  { t: "冷处理，故意也不干等 TA 反应", d: "bond", tag: "test_probe" } ] },
 { q: "你理想中的周末二人时光是：", multi: true, opts: [
-  { t: "一起做饭追剧，柴米油盐也甜", d: "manage", love: "time" },
+  { t: "一起做饭追剧，柴米油盐也甜", d: "manage", love: "time", tag: "ritual" },
   { t: "出门看展逛街，拍很多照片", d: "expr" },
-  { t: "各自看各自的书，同一屋檐下安静待着", d: "indep" },
-  { t: "睡到自然醒，点个外卖随心过", d: "bond" } ] },
+  { t: "各自看各自的书，同一屋檐下安静待着", d: "indep", tag: "self_space_high" },
+  { t: "睡到自然醒，点个外卖随心过", d: "bond", tag: "quiet_love" } ] },
 { q: "对方在你朋友面前开了个让你尴尬的玩笑，你会：", opts: [
-  { t: "当场笑着圆过去，回家再跟 TA 说", d: "bond" },
-  { t: "当场就变了脸，让 TA 下不来台", d: "expr" },
-  { t: "不在意，TA 开玩笑本来就没恶意", d: "secure" },
+  { t: "当场笑着圆过去，回家再跟 TA 说", d: "bond", tag: "open_talk" },
+  { t: "当场就变了脸，让 TA 下不来台", d: "expr", tag: "explode" },
+  { t: "不在意，TA 开玩笑本来就没恶意", d: "secure", tag: "trust_base" },
   { t: "找机会也调侃回去，礼尚往来", d: "manage" } ] },
 { q: "如果 TA 有个升职机会但要异地两年，你会：", opts: [
-  { t: "支持 TA 去，感情经得起距离考验", d: "indep" },
-  { t: "全力支持，认真规划两个人的探亲计划", d: "manage" },
-  { t: "嘴上支持，心里已经开始焦虑不安", d: "secure" },
-  { t: "希望 TA 优先考虑家庭，一起商量再定", d: "bond" } ] },
+  { t: "支持 TA 去，感情经得起距离考验", d: "indep", tag: "trust_base" },
+  { t: "全力支持，认真规划两个人的探亲计划", d: "manage", tag: "co_plan" },
+  { t: "嘴上支持，心里已经开始焦虑不安", d: "secure", tag: "anxious_scan", note: "支持说出口、不安藏心里，是很多默默承受者的模式。让 TA 知道你的担心，一起设计应对方案，焦虑才有处安放。" },
+  { t: "希望 TA 优先考虑家庭，一起商量再定", d: "bond", tag: "co_plan" } ] },
 { q: "你们表达「我爱你」或类似情话的频率是：", opts: [
-  { t: "高频，一天不甜一下就难受", d: "expr", love: "words" },
-  { t: "偶尔，特殊时刻才说出口", d: "indep" },
-  { t: "我常说，TA 比较含蓄", d: "expr" },
-  { t: "几乎不说，但做出来的事都是爱", d: "manage", love: "act" } ] },
+  { t: "高频，一天不甜一下就难受", d: "expr", love: "words", tag: "open_talk" },
+  { t: "偶尔，特殊时刻才说出口", d: "indep", tag: "quiet_love" },
+  { t: "我常说，TA 比较含蓄", d: "expr", tag: "open_talk" },
+  { t: "几乎不说，但做出来的事都是爱", d: "manage", love: "act", tag: "act_love" } ] },
 { q: "发现对方的消费超出预算（买了贵重物品），你会：", opts: [
-  { t: "先了解 TA 为什么喜欢，再谈预算", d: "manage" },
-  { t: "先不痛快一阵，忍不住念叨几句", d: "expr" },
-  { t: "TA 开心就好，钱再挣嘛", d: "secure" },
-  { t: "各自的钱各自定，我的规矩是我的", d: "indep" } ] },
+  { t: "先了解 TA 为什么喜欢，再谈预算", d: "manage", tag: "co_plan" },
+  { t: "先不痛快一阵，忍不住念叨几句", d: "expr", tag: "explode", note: "先情绪后沟通，容易变成「为态度吵架」。把不满延迟 10 分钟，从「为什么买」聊成「我们的预算规则」，问题比情绪先到桌面。" },
+  { t: "TA 开心就好，钱再挣嘛", d: "secure", tag: "trust_base" },
+  { t: "各自的钱各自定，我的规矩是我的", d: "indep", tag: "self_space_high" } ] },
 { q: "你更希望对方用哪种方式安慰你？", multi: true, opts: [
   { t: "什么都不说，就是抱抱我", d: "secure", love: "touch" },
   { t: "认真听我说完，肯定我的感受", d: "expr", love: "words" },
@@ -816,54 +929,54 @@ const QUESTIONS = [
   { t: "带我出去走走，转移注意力", d: "bond", love: "time" } ] },
 { q: "你们的亲密接触（牵手/拥抱/亲吻）频率：", opts: [
   { t: "很多，出门牵手是习惯", d: "expr", love: "touch" },
-  { t: "一般，感情好但不常表现出来", d: "indep" },
+  { t: "一般，感情好但不常表现出来", d: "indep", tag: "quiet_love" },
   { t: "我主动多，TA 回应相对少", d: "secure" },
-  { t: "老夫老妻了，全靠意会", d: "manage" } ] },
+  { t: "老夫老妻了，全靠意会", d: "manage", tag: "quiet_love" } ] },
 { q: "对方提议一起培养个共同爱好，你会：", opts: [
-  { t: "太好了！马上列个清单挑一个", d: "manage", love: "time" },
-  { t: "配合参与，但我还是更喜欢自己的爱好", d: "indep" },
+  { t: "太好了！马上列个清单挑一个", d: "manage", love: "time", tag: "ritual" },
+  { t: "配合参与，但我还是更喜欢自己的爱好", d: "indep", tag: "self_space_high" },
   { t: "只要 TA 开心，我都能试试", d: "secure" },
   { t: "试了几个都半途而废，随缘吧", d: "bond" } ] },
 { q: "当 TA 情绪失控冲你发火时（事后会道歉），你会：", opts: [
-  { t: "等 TA 平静后认真谈：发脾气解决不了问题", d: "manage" },
-  { t: "当场怼回去，凭什么我要受着", d: "expr" },
-  { t: "默默受着， TA 压力大我知道", d: "secure" },
-  { t: "暂时躲开，等双方都消气再说", d: "bond" } ] },
+  { t: "等 TA 平静后认真谈：发脾气解决不了问题", d: "manage", tag: "open_talk" },
+  { t: "当场怼回去，凭什么我要受着", d: "expr", tag: "explode" },
+  { t: "默默受着，TA 压力大我知道", d: "secure", tag: "suppress", note: "「TA 压力大我知道」是理解，但也可能是自我说服。被发泄不是你的义务，事后平静地说出你的感受，是必要的自我保护。" },
+  { t: "暂时躲开，等双方都消气再说", d: "bond", tag: "avoid_conflict" } ] },
 { q: "你对「报备行踪」的看法是：", opts: [
-  { t: "主动报备，让 TA 安心是种体贴", d: "manage" },
-  { t: "到哪里说一声可以，但别查岗", d: "indep" },
-  { t: "不报备我会胡思乱想", d: "secure" },
+  { t: "主动报备，让 TA 安心是种体贴", d: "manage", tag: "act_love" },
+  { t: "到哪里说一声可以，但别查岗", d: "indep", tag: "boundary_clear" },
+  { t: "不报备我会胡思乱想", d: "secure", tag: "anxious_scan" },
   { t: "夫妻之间何必报备，太见外", d: "bond" } ] },
 { q: "你们家中「谁迁就谁」更多？", opts: [
-  { t: "我迁就 TA 多，想维持家的和睦", d: "manage" },
+  { t: "我迁就 TA 多，想维持家的和睦", d: "manage", tag: "over_give", note: "长期的迁就需要一个出口。这次试着明确表达你的偏好——健康的关系，容得下两个都「想要」的人。" },
   { t: "TA 迁就我多，我脾气比较直", d: "expr" },
-  { t: "差不多，互相迁就才长久", d: "bond" },
-  { t: "各过各的，没什么可迁就的", d: "indep" } ] },
+  { t: "差不多，互相迁就才长久", d: "bond", tag: "co_plan" },
+  { t: "各过各的，没什么可迁就的", d: "indep", tag: "self_space_high" } ] },
 { q: "深夜对方发来一句「睡了吗，有点想你了」，你会：", opts: [
-  { t: "心里一暖，立刻回一大段情话", d: "expr", love: "words" },
-  { t: "虽然困，还是马上打视频过去", d: "secure", love: "time" },
-  { t: "「早点睡吧」，明天再聊", d: "manage" },
-  { t: "白天不是刚见过嘛，奇怪", d: "indep" } ] },
+  { t: "心里一暖，立刻回一大段情话", d: "expr", love: "words", tag: "open_talk" },
+  { t: "虽然困，还是马上打视频过去", d: "secure", love: "time", tag: "open_talk" },
+  { t: "「早点睡吧」，明天再聊", d: "manage", tag: "cold_response" },
+  { t: "白天不是刚见过嘛，奇怪", d: "indep", tag: "cold_response", note: "对含蓄的 TA 来说，这句「想你了」鼓起了很大勇气。哪怕觉得多余，也回一句「我也想你」——爱的表达，值得被稳稳接住。" } ] },
 { q: "如果要给你们的感情现状打个分（满分 10），你会打：", opts: [
-  { t: "8-10 分：我们一直在用心经营", d: "manage" },
+  { t: "8-10 分：我们一直在用心经营", d: "manage", tag: "ritual" },
   { t: "6-7 分：还不错，但有点平淡了", d: "bond" },
-  { t: "分数不重要，TA 怎么看我才重要", d: "secure" },
+  { t: "分数不重要，TA 怎么看我才重要", d: "secure", note: "把自我价值完全绑定在对方评价上，是甜蜜也是软肋。练习自己给自己打分：今天的我，有没有对自己好一点？" },
   { t: "不好说，我们对感情的期待不太一样", d: "indep" } ] },
 { q: "你们因为「TA 朋友聚会带不带我」产生过分歧吗？", opts: [
-  { t: "带！我们和朋友玩都爱带上对方", d: "manage", love: "time" },
-  { t: "不带，各自有各自的圈子挺好", d: "indep" },
-  { t: "不带我会失落，是我不够重要吗", d: "secure" },
+  { t: "带！我们和朋友玩都爱带上对方", d: "manage", love: "time", tag: "co_plan" },
+  { t: "不带，各自有各自的圈子挺好", d: "indep", tag: "self_space_high" },
+  { t: "不带我会失落，是我不够重要吗", d: "secure", tag: "anxious_scan" },
   { t: "带不带随缘，我没那么在意", d: "bond" } ] },
 { q: "你觉得「好的感情」里，两个人应该是：", multi: true, opts: [
-  { t: "亲密有间，像两棵并肩生长的树", d: "indep" },
-  { t: "如胶似漆，谁也离不开谁", d: "secure" },
-  { t: "像合伙人：目标一致，分工明确", d: "manage" },
-  { t: "像朋友+恋人：聊得来最要紧", d: "expr" } ] },
+  { t: "亲密有间，像两棵并肩生长的树", d: "indep", tag: "self_space_high" },
+  { t: "如胶似漆，谁也离不开谁", d: "secure", tag: "merge_expect" },
+  { t: "像合伙人：目标一致，分工明确", d: "manage", tag: "co_plan" },
+  { t: "像朋友+恋人：聊得来最要紧", d: "expr", tag: "open_talk" } ] },
 { q: "TA 随口说想要某样东西很久了，你会：", opts: [
-  { t: "偷偷记下，找机会给 TA 惊喜", d: "manage", love: "gift" },
-  { t: "直接问 TA 要不要现在就买", d: "expr" },
-  { t: "记住了，等过节作为礼物一起给", d: "manage", love: "gift" },
-  { t: "想要就自己买呀，成年人都这样", d: "indep" } ] }
+  { t: "偷偷记下，找机会给 TA 惊喜", d: "manage", love: "gift", tag: "ritual" },
+  { t: "直接问 TA 要不要现在就买", d: "expr", tag: "open_talk" },
+  { t: "记住了，等过节作为礼物一起给", d: "manage", love: "gift", tag: "ritual" },
+  { t: "想要就自己买呀，成年人都这样", d: "indep", tag: "cold_response" } ] }
 /* __MORE_QUESTIONS_21_40__ */
 ,
 { q: "《爱语专项》最让你感到「被爱着」的瞬间是：", multi: true, opts: [
@@ -907,10 +1020,10 @@ const QUESTIONS = [
   { t: "看得见摸得着的心意", d: "secure", love: "gift" },
   { t: "落到实处的体贴与照顾", d: "manage", love: "act" } ] },
 { q: "十年后的你们，你希望画面是：", opts: [
-  { t: "还能像现在一样打闹说笑，眼里有光", d: "expr" },
-  { t: "依然每年留时间只属于两个人去旅行", d: "manage" },
-  { t: "家庭稳固，孩子和老人都妥帖安好", d: "secure" },
-  { t: "各自有事业有爱好，彼此是最稳的底气", d: "indep" } ] },
+  { t: "还能像现在一样打闹说笑，眼里有光", d: "expr", tag: "open_talk" },
+  { t: "依然每年留时间只属于两个人去旅行", d: "manage", tag: "ritual" },
+  { t: "家庭稳固，孩子和老人都妥帖安好", d: "secure", tag: "co_plan" },
+  { t: "各自有事业有爱好，彼此是最稳的底气", d: "indep", tag: "self_space_high" } ] },
 { q: "最后一道：此刻看着身边这个人的名字，你心里冒出的第一个词是：", opts: [
   { t: "「谢谢」——谢谢你一直都在", d: "manage" },
   { t: "「爱你」——还是好喜欢", d: "expr" },
